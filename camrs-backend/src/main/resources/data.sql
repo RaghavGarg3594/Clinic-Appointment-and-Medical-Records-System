@@ -1,0 +1,33 @@
+-- ============================================================
+-- ICD-10 Common Diagnosis Codes (for the icd10_codes table)
+-- ============================================================
+INSERT IGNORE INTO icd10_codes (code, description) VALUES
+('A09', 'Infectious gastroenteritis and colitis, unspecified'),
+('B34.9', 'Viral infection, unspecified'),
+('D50.9', 'Iron deficiency anaemia, unspecified'),
+('E11.9', 'Type 2 diabetes mellitus without complications'),
+('E78.5', 'Dyslipidaemia, unspecified'),
+('F41.1', 'Generalized anxiety disorder'),
+('F32.9', 'Major depressive disorder, single episode'),
+('G43.9', 'Migraine, unspecified'),
+('I10', 'Essential (primary) hypertension'),
+('J00', 'Acute nasopharyngitis (common cold)'),
+('J02.9', 'Acute pharyngitis, unspecified'),
+('J06.9', 'Upper respiratory infection, unspecified'),
+('J18.9', 'Pneumonia, unspecified organism'),
+('J20.9', 'Acute bronchitis, unspecified'),
+('J45.9', 'Asthma, unspecified'),
+('K21.0', 'Gastro-oesophageal reflux disease with oesophagitis'),
+('K29.7', 'Gastritis, unspecified'),
+('K59.0', 'Constipation'),
+('L30.9', 'Dermatitis, unspecified'),
+('L70.0', 'Acne vulgaris'),
+('M54.5', 'Low back pain'),
+('N39.0', 'Urinary tract infection, site not specified'),
+('R05', 'Cough'),
+('R10.4', 'Other and unspecified abdominal pain'),
+('R50.9', 'Fever, unspecified'),
+('R51', 'Headache'),
+('T78.4', 'Allergy, unspecified'),
+('Z00.00', 'General adult medical examination'),
+('Z23', 'Encounter for immunization');

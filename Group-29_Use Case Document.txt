@@ -1,0 +1,676 @@
+CAMRS - Use Case Document 
+Page 1 
+Clinic Appointment 
+and 
+Medical Records System 
+(CAMRS) 
+Use Case Document 
+Group 29 
+ 
+ 
+CAMRS - Use Case Document 
+Page 2 
+Use Case Diagram 
+Use Case Diagram of CAMRS 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CAMRS - Use Case Document 
+Page 3 
+ 
+Use Case Documents 
+UC1: Register Patient 
+ID 
+UC1 
+Title 
+Register Patient 
+Description 
+Allows a new patient to register online by providing personal details, 
+contact information, medical history, allergies, and insurance details. 
+The system assigns a unique Patient ID upon successful 
+registration. 
+Primary Actor 
+Patient 
+Secondary Actor 
+Authentication System 
+Preconditions 
+• Patient must not already be registered in the system. 
+• Registration page must be accessible. 
+Postconditions 
+• Patient record is stored in the database. 
+• A unique Patient ID is assigned. 
+• Login credentials are sent to the patient. 
+Dependency 
+None 
+Generalization 
+None (No parent or child use case for Register Patient.) 
+Main Success 
+Scenario 
+1. Patient navigates to the registration page. 
+2. System displays the registration form. 
+3. Patient enters personal details, medical history, allergies, and 
+insurance information. 
+4. System validates all required fields and data formats. 
+5. System generates and assigns a unique Patient ID. 
+6. Patient record is stored in the database. 
+7. System sends login credentials to the patient via email. 
+8. Confirmation message is displayed. 
+Extensions or 
+Alternate Flow 
+• Invalid Data: If any required field is missing or in incorrect format, 
+system displays an error message and prompts reentry. 
+• Patient Already Exists: If email or contact already exists, system 
+displays a duplication warning and halts registration. 
+Frequency of Use 
+High (Occurs for every new patient visiting the clinic.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Core entry point for all patient-related operations.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 4 
+UC2: Login / Authenticate 
+ID 
+UC2 
+Title 
+Login / Authenticate 
+Description 
+Allows registered users (Patient, Doctor, Lab Staff, Admin Staff) to 
+securely log into the CAMRS system using their credentials. Role-
+based access is granted upon successful authentication. 
+Primary Actor 
+Patient / Doctor / Lab Staff / Admin Staff 
+Secondary Actor 
+Authentication System 
+Preconditions 
+• User must be registered in the system. 
+• System must be accessible via a supported web browser. 
+Postconditions 
+• User is authenticated and granted role-based access. 
+• Session is initiated with a 30-minute inactivity timeout. 
+• Audit log entry is created for the login event. 
+Dependency 
+None 
+Generalization 
+None (Login is included by most other use cases as a dependency.) 
+Main Success 
+Scenario 
+1. User navigates to the CAMRS login page. 
+2. User enters username/email and password. 
+3. System validates credentials against the database. 
+4. System identifies user role (Patient, Doctor, Lab Staff, Admin). 
+5. System grants role-based access and redirects to the appropriate 
+dashboard. 
+6. Audit log records the successful login. 
+Extensions or 
+Alternate Flow 
+• Invalid Credentials: System displays an error message. After 5 
+consecutive failures, the account is locked. 
+• Account Locked: System notifies the user and prompts contact with 
+admin for unlock. 
+• Session Timeout: After 30 minutes of inactivity, the session expires 
+and the user is redirected to the login page. 
+Frequency of Use 
+Very High (Every system interaction requires prior authentication.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Security foundation for the entire system.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 5 
+UC3: Book Appointment 
+ID 
+UC3 
+Title 
+Book Appointment 
+Description 
+Allows a registered and authenticated patient to book an 
+appointment with an available doctor by selecting a specialization, 
+doctor, and preferred time slot. A unique token number is generated 
+upon confirmation. 
+Primary Actor 
+Patient 
+Secondary Actor 
+System (Notification Service) 
+Preconditions 
+• Patient must be logged into the system. 
+• Doctor schedules must be available. 
+Postconditions 
+• Appointment is confirmed and stored in the database. 
+• A unique token number is generated for queue management. 
+• Email/SMS confirmation is sent to the patient. 
+Dependency 
+<<include>> UC2: Login / Authenticate 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Patient navigates to the Book Appointment section. 
+2. System displays available doctor specializations. 
+3. Patient selects a specialization and a preferred doctor. 
+4. System displays available time slots for the selected doctor. 
+5. Patient selects a time slot and confirms the booking. 
+6. System stores the appointment and generates a unique token 
+number. 
+7. System sends an email/SMS confirmation to the patient. 
+Extensions or 
+Alternate Flow 
+• No Slots Available: System notifies the patient and suggests 
+alternate doctors or dates. 
+• Doctor on Leave: Selected slot is not shown; patient is prompted to 
+choose another doctor. 
+• Booking Conflict: If the same patient attempts a duplicate booking, 
+system displays a warning. 
+• Emergency Appointment: Patient selects "Emergency" as 
+appointment type; system bypasses regular slot availability and 
+books in a priority emergency slot. Doctor is immediately notified. 
+Frequency of Use 
+Very High (Multiple bookings occur daily.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Primary patient-doctor interaction trigger.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 6 
+UC4: Cancel / Reschedule Appointment 
+ID 
+UC4 
+Title 
+Cancel / Reschedule Appointment 
+Description 
+Allows a patient to cancel an existing appointment or reschedule it to 
+a different available time slot. The system records the cancellation 
+reason and notifies all relevant parties. 
+Primary Actor 
+Patient 
+Secondary Actor 
+System (Notification Service) 
+Preconditions 
+• Patient must be logged in. 
+• An active scheduled appointment must exist. 
+Postconditions 
+• Appointment status is updated to Cancelled or Rescheduled. 
+• Original slot is freed for other patients. 
+• Notification is sent to both the patient and the doctor. 
+Dependency 
+<<extend>> UC3: Book Appointment 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Patient navigates to My Appointments. 
+2. Patient selects the appointment to cancel or reschedule. 
+3. For Cancel: Patient enters a cancellation reason. System updates 
+status to Cancelled. 
+4. For Reschedule: Patient selects a new available time slot. System 
+updates the appointment and generates a new token. 
+5. System notifies the patient and doctor of the change. 
+6. Audit log records the action. 
+Extensions or 
+Alternate Flow 
+• No Available Slots for Reschedule: System informs the patient and 
+suggests alternative doctors. 
+• Cancellation too Late: System may display a policy warning if 
+cancellation is within a restricted time window. 
+Frequency of Use 
+Medium (Occurs based on patient availability changes.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+Medium (Supports appointment lifecycle management.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 7 
+UC5: View Medical Records & Lab Reports 
+ID 
+UC5 
+Title 
+View Medical Records & Lab Reports 
+Description 
+Allows an authenticated patient to view their complete medical 
+history, past diagnoses, prescriptions, and download their laboratory 
+reports through their secure patient portal. 
+Primary Actor 
+Patient 
+Secondary Actor 
+None 
+Preconditions 
+• Patient must be logged into the system. 
+• Medical records and/or lab results must exist for the patient. 
+Postconditions 
+• Patient views medical records in chronological order. 
+• Lab report PDF is available for download. 
+Dependency 
+<<include>> UC2: Login / Authenticate 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Patient logs in and navigates to Medical Records. 
+2. System displays a chronological list of past consultations. 
+3. Patient selects a record to view details including diagnosis, 
+prescriptions, and advice. 
+4. Patient navigates to Lab Reports section. 
+5. System displays completed lab results with reference ranges. 
+6. Patient downloads the lab report PDF. 
+Extensions or 
+Alternate Flow 
+• No Records Found: System displays a message indicating no 
+medical history is available. 
+• Report Not Yet Ready: System displays test status as Pending if 
+results are not yet entered. 
+Frequency of Use 
+Medium (Accessed when patients need to review health 
+information.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+Medium (Supports patient engagement and informed care.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 8 
+UC6: View and Pay Bill 
+ID 
+UC6 
+Title 
+View and Pay Bill 
+Description 
+Allows patients to view their itemized bills and make payments, and 
+allows admin staff to generate bills, record payments, and manage 
+billing operations. Supports payment recording and receipt 
+generation. 
+Primary Actor 
+Patient / Admin Staff 
+Secondary Actor 
+Payment Gateway 
+Preconditions 
+• User (Patient or Admin Staff) must be logged in. 
+• A consultation must be marked as Completed for bill generation. 
+Postconditions 
+• An itemized bill is generated with a unique invoice number. 
+• Payment is recorded against the bill. 
+• Receipt is generated and sent to the patient via email/SMS. 
+• Bill status is updated to Paid, Partially Paid, or Unpaid. 
+Dependency 
+<<include>> UC2: Login / Authenticate 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. System automatically generates a bill upon consultation 
+completion. 
+2. Admin staff reviews the itemized bill (consultation, lab, medication, 
+procedure charges). 
+3. Admin applies any applicable discount (e.g., senior citizen, staff). 
+4. System calculates subtotal, tax, and total amount. 
+5. Patient views bill and makes payment via Cash, Card, UPI, or 
+Insurance. 
+6. Admin records the payment with method and transaction 
+reference. 
+7. System generates a receipt and sends it to the patient. 
+8. Bill status is updated accordingly. 
+Extensions or 
+Alternate Flow 
+• Insurance Claim: Admin records the insurance-approved amount; 
+balance due is reduced. 
+• Partial Payment: Bill status is set to Partially Paid; outstanding 
+balance is tracked. 
+• Overdue Bill: System flags overdue bills and includes them in the 
+Outstanding Payments Report. 
+Frequency of Use 
+High (Generated for every completed patient visit.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Core financial operation of the clinic.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 9 
+UC7: View Daily Schedule 
+ID 
+UC7 
+Title 
+View Daily Schedule 
+Description 
+Allows a doctor to view their daily list of scheduled appointments, 
+including patient details, visit reason, appointment type, and token 
+numbers, to manage their consultation workflow. 
+Primary Actor 
+Doctor 
+Secondary Actor 
+None 
+Preconditions 
+• Doctor must be logged into the system. 
+• Appointments must exist for the selected date. 
+Postconditions 
+• Daily schedule is displayed in chronological order. 
+• Doctor can mark appointment status as Checked-In, In-Progress, 
+or Completed. 
+Dependency 
+<<include>> UC2: Login / Authenticate 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Doctor logs into the system. 
+2. System displays the doctor's dashboard with today's appointment 
+list. 
+3. Doctor views patient details, reason for visit, and token numbers. 
+4. Doctor can filter by date or appointment status. 
+5. Doctor updates appointment status as consultations progress. 
+Extensions or 
+Alternate Flow 
+• No Appointments: System displays a message indicating no 
+scheduled appointments for the selected date. 
+• Emergency Appointment Added: System refreshes the list in real 
+time when an emergency slot is booked. 
+Frequency of Use 
+High (Used by every doctor at the start of every working day.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Core doctor workflow enabler.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 10 
+UC8: Record Consultation & Diagnosis 
+ID 
+UC8 
+Title 
+Record Consultation & Diagnosis 
+Description 
+Allows a doctor to create a structured medical record after a patient 
+consultation, including vitals, chief complaint, diagnosis using ICD-10 
+codes, severity, medical advice, and follow-up instructions. 
+Primary Actor 
+Doctor 
+Secondary Actor 
+System (ICD-10 Code Database) 
+Preconditions 
+• Doctor must be logged in. 
+• A Checked-In or In-Progress appointment must exist for the patient. 
+Postconditions 
+• Medical record is stored and linked to the patient profile and 
+appointment. 
+• Diagnosis is recorded using a standardized ICD-10 code. 
+• Audit trail is created for the record. 
+Dependency 
+<<include>> UC9: Generate Prescription 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Doctor selects a patient from the daily appointment list. 
+2. System displays patient profile and past medical history. 
+3. Doctor records vital signs (BP, temperature, pulse, weight, height). 
+4. Doctor enters chief complaint, symptoms, and physical 
+examination findings. 
+5. Doctor selects diagnosis from the ICD-10 code list. 
+6. Doctor records severity, medical advice, and follow-up date. 
+7. System stores the medical record linked to the patient and 
+appointment. 
+8. Appointment status is updated to Completed. 
+Extensions or 
+Alternate Flow 
+• ICD-10 Code Not Found: Doctor can search by keyword; system 
+filters matching codes. 
+• Incomplete Record: System prompts for mandatory fields before 
+allowing save. 
+• Record Modification: Any edits after saving are tracked with user ID 
+and timestamp in the audit log. 
+Frequency of Use 
+High (Created for every completed consultation.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Central clinical data capture function.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 11 
+UC9: Generate Prescription 
+ID 
+UC9 
+Title 
+Generate Prescription 
+Description 
+Allows a doctor to issue a formal prescription specifying medications, 
+dosages, frequency, route of administration, and meal-time 
+instructions. The prescription can be printed as a physical printout. 
+Primary Actor 
+Doctor 
+Secondary Actor 
+Medication Database 
+Preconditions 
+• Doctor must be logged in. 
+• A medical record must be in progress for the consultation. 
+Postconditions 
+• Prescription is stored and linked to the patient record. 
+• Prescription printout is available for generation. 
+• System records the print timestamp if printed. 
+Dependency 
+None (This use case is included by UC8: Record Consultation & 
+Diagnosis) 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Doctor adds prescription items during or after recording 
+consultation. 
+2. Doctor selects medication from the system catalogue. 
+3. Doctor specifies dosage, frequency, duration, route of 
+administration, and meal-time instruction. 
+4. System validates medication availability in inventory. 
+5. Prescription is saved and linked to the medical record. 
+6. Doctor optionally generates a prescription printout. 
+7. System records the print timestamp. 
+Extensions or 
+Alternate Flow 
+• Medication Out of Stock: System alerts the doctor and suggests an 
+alternative. 
+• Allergy Warning: System flags if a prescribed medication conflicts 
+with patient's recorded allergies. 
+• Print Failure: System logs the failure and allows retry. 
+Frequency of Use 
+High (Generated for most consultations.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Critical for patient treatment continuity.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 12 
+UC10: Order Lab Test 
+ID 
+UC10 
+Title 
+Order Lab Test 
+Description 
+Allows a doctor to place a laboratory test order for a patient during or 
+after a consultation, specifying the test type and priority level. The 
+order is transmitted to lab staff for processing. 
+Primary Actor 
+Doctor 
+Secondary Actor 
+Lab Staff 
+Preconditions 
+• Doctor must be logged in. 
+• A consultation record must be in progress or completed for the 
+patient. 
+Postconditions 
+• Lab test order is stored and linked to the patient record. 
+• Lab staff are notified of the new test order. 
+• Test status is set to Ordered. 
+Dependency 
+<<extend>> UC8: Record Consultation & Diagnosis 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Doctor selects Order Lab Test during or after consultation. 
+2. System displays the available test catalogue. 
+3. Doctor selects the required test type and specifies priority 
+(Routine, Urgent, STAT). 
+4. Doctor adds any special instructions. 
+5. System saves the order and notifies lab staff. 
+6. Test status is updated to Ordered. 
+Extensions or 
+Alternate Flow 
+• Test Type Not Available: System displays a message; doctor can 
+add a custom note. 
+• STAT Priority: System immediately alerts lab staff for urgent 
+processing. 
+Frequency of Use 
+High (Ordered for many consultations requiring diagnostic 
+confirmation.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Essential for diagnostic workflow.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 13 
+UC11: Enter Lab Results & Generate Report 
+ID 
+UC11 
+Title 
+Enter Lab Results & Generate Report 
+Description 
+Allows lab staff to enter diagnostic test results for a patient, including 
+result values, units, and reference ranges. The system evaluates 
+results, generates a downloadable lab report, and sends alerts for 
+critical values. 
+Primary Actor 
+Lab Staff 
+Secondary Actor 
+System (Notification Service) 
+Preconditions 
+• Lab staff must be logged in. 
+• A lab test order must exist with status Ordered or Sample 
+Collected. 
+Postconditions 
+• Test results are stored and linked to the patient record. 
+• Lab report PDF is generated and available for patient download. 
+• Doctor and patient are notified of result availability. 
+• Critical values trigger immediate alerts to doctor and patient. 
+Dependency 
+<<include>> UC2: Login / Authenticate 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Lab staff logs in and views pending test orders. 
+2. Lab staff selects a test order and marks sample as collected. 
+3. Lab staff enters result values, units, and notes. 
+4. System compares result against normal reference ranges. 
+5. System stores the result and generates a lab report PDF. 
+6. Patient and doctor are notified that results are available. 
+7. Test status is updated to Completed. 
+Extensions or 
+Alternate Flow 
+• Critical Value Detected: System immediately triggers a critical alert 
+(email/SMS) to the doctor and patient. 
+• Incomplete Entry: System prevents saving if mandatory result fields 
+are empty. 
+• Result Correction: Any modification after submission is logged in 
+the audit trail. 
+Frequency of Use 
+High (Performed for every completed lab test order.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Closes the diagnostic loop for clinical decisions.) 
+ 
+ 
+CAMRS - Use Case Document 
+Page 14 
+UC12: Generate Reports 
+ID 
+UC12 
+Title 
+Generate Reports 
+Description 
+Allows admin staff to generate operational and financial reports 
+including doctor-wise consultation statistics, disease/diagnosis 
+statistics by ICD-10 code, and outstanding payment reports for clinic 
+management and decision-making. 
+Primary Actor 
+Admin Staff 
+Secondary Actor 
+None 
+Preconditions 
+• Admin staff must be logged in. 
+• Sufficient data must exist in the system for the selected reporting 
+period. 
+Postconditions 
+• Report is generated and displayed on screen. 
+• Report can be exported or printed for record keeping. 
+Dependency 
+<<include>> UC2: Login / Authenticate 
+Generalization 
+None 
+Main Success 
+Scenario 
+1. Admin staff navigates to the Reports section. 
+2. Admin selects the report type: Consultation Statistics, Disease 
+Statistics, or Outstanding Payments. 
+3. Admin specifies the date range and any filters (e.g., doctor, 
+diagnosis code). 
+4. System retrieves and aggregates relevant data from the database. 
+5. System displays the report with charts and summaries. 
+6. Admin exports or prints the report. 
+Extensions or 
+Alternate Flow 
+• No Data Available: System displays a message if no records exist 
+for the selected period. 
+• Export Failure: System logs the error and allows retry. 
+Frequency of Use 
+Medium (Generated periodically for clinic management review.) 
+Status 
+Proposed 
+Owner 
+Group 29 
+Priority 
+High (Supports operational decisions and regulatory compliance.) 
+ 

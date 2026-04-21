@@ -1,0 +1,218 @@
+Class Diagram DocumentaƟon 
+ 
+Group-29 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Class Diagram 
+ 
+ 
+ 
+ 
+Key RelaƟonships 
+1. User – PaƟent / Doctor / Lab Staﬀ / Admin Staﬀ relaƟonship is GENERALIZATION. 
+User is the abstract parent class; PaƟent, Doctor, Lab Staﬀ, and Admin Staﬀ inherit all 
+base aƩributes and methods from User. 
+2. PaƟent – Appointment relaƟonship is ONE-TO-MANY. A paƟent can book mulƟple 
+appointments; therefore, the PaƟent–Appointment relaƟonship is one-to-many. 
+3. Doctor – Appointment relaƟonship is ONE-TO-MANY. A doctor can conduct mulƟple 
+appointments; therefore, the Doctor–Appointment relaƟonship is one-to-many. 
+4. Doctor – DoctorSchedule relaƟonship is COMPOSITION ONE-TO-ONE. A doctor has 
+exactly one schedule; the schedule cannot exist without the doctor. 
+5. Appointment – MedicalRecord relaƟonship is ONE-TO-ONE. Each appointment 
+generates at most one medical record upon consultaƟon compleƟon. 
+6. MedicalRecord – PrescripƟon relaƟonship is COMPOSITION ONE-TO-ONE. A 
+prescripƟon is part of a medical record and cannot exist independently of it. 
+7. PrescripƟon – PrescripƟonItem relaƟonship is COMPOSITION ONE-TO-MANY. A 
+prescripƟon contains one or more prescripƟon items; items cannot exist without 
+their prescripƟon. 
+8. PrescripƟonItem – MedicaƟon relaƟonship is ASSOCIATION MANY-TO-ONE. MulƟple 
+prescripƟon items may refer to the same medicaƟon from the inventory. 
+9. MedicalRecord – LabTestOrder relaƟonship is ONE-TO-MANY. A single medical 
+record can trigger mulƟple lab test orders during or aŌer a consultaƟon. 
+10. LabTestOrder – LabResult relaƟonship is COMPOSITION ONE-TO-ONE. Each lab test 
+order produces at most one result; the result cannot exist without its corresponding 
+order. 
+11. Appointment – Bill relaƟonship is ONE-TO-ONE. Each completed appointment 
+generates exactly one bill for the paƟent. 
+12. Bill – Payment relaƟonship is COMPOSITION ONE-TO-MANY. A bill can be seƩled 
+through mulƟple payment transacƟons such as parƟal payments or insurance claims. 
+ 
+ 
+ 
+Class DescripƟons 
+User 
+Represents a generic system user and acts as the abstract parent class for PaƟent, Doctor, 
+Lab Staﬀ, and Administrator. 
+AƩributes: userID, name, email, password, phone, role 
+Methods: login(), logout(), updateProﬁle() 
+ 
+PaƟent 
+Represents a registered paƟent who uses the system to book appointments, view medical 
+records, download lab reports, and manage bills. 
+AƩributes: paƟentID, age, gender, address, medicalHistory, allergies, insuranceDetails 
+Methods: register(), bookAppointment(), cancelAppointment(), viewMedicalRecords(), 
+downloadLabReport(), viewBill(), payBill() 
+RelaƟonships: 
+ 
+One paƟent can have mulƟple appointments. 
+ 
+One paƟent can have mulƟple lab test orders linked through medical records. 
+ 
+Doctor 
+Represents a medical professional responsible for conducƟng consultaƟons, recording 
+diagnoses, generaƟng prescripƟons, and ordering lab tests. 
+AƩributes: doctorID, specializaƟon, consultaƟonFee, workingHours 
+Methods: viewDailySchedule(), recordConsultaƟon(), generatePrescripƟon(), orderLabTest(), 
+viewPaƟentHistory() 
+RelaƟonships: 
+ 
+One doctor conducts mulƟple appointments. 
+ 
+One doctor has exactly one schedule. 
+ 
+ 
+ 
+LabStaﬀ 
+Represents laboratory personnel responsible for processing test orders and entering results 
+into the system. 
+AƩributes: staﬀID, department 
+Methods: viewPendingOrders(), enterTestResults(), generateReport() 
+RelaƟonships: 
+ 
+One lab staﬀ member can enter mulƟple lab results. 
+ 
+AdminStaﬀ 
+Represents administraƟve personnel who manage system operaƟons including doctor 
+proﬁles, medicaƟon inventory, billing, and report generaƟon. 
+AƩributes: adminID 
+Methods: addDoctor(), updateDoctorSchedule(), manageInventory(), generateReports(), 
+manageBilling() 
+RelaƟonships: 
+ 
+One admin staﬀ member manages mulƟple medicaƟon records. 
+ 
+Appointment 
+Represents a scheduled meeƟng between a paƟent and a doctor. It stores booking details, 
+token number, and current status. 
+AƩributes: appointmentID, date, ƟmeSlot, tokenNumber, status, type, cancellaƟonReason 
+Methods: conﬁrm(), cancel(), reschedule(), updateStatus() 
+RelaƟonships: 
+ 
+Each appointment is booked by one paƟent and conducted by one doctor. 
+ 
+Each appointment generates at most one medical record and one bill. 
+ 
+ 
+ 
+ 
+DoctorSchedule 
+Represents the working schedule of a doctor including available days, working hours, and 
+leave dates. 
+AƩributes: scheduleID, workingDays, startTime, endTime, leaveDate 
+Methods: updateSchedule(), checkAvailability() 
+RelaƟonships: 
+ 
+Each doctor has exactly one schedule; the schedule is owned by the doctor through 
+composiƟon. 
+ 
+MedicalRecord 
+Represents the clinical record created by a doctor aŌer a paƟent consultaƟon. It includes 
+vitals, diagnosis, ICD-10 code, severity, advice, and follow-up details. 
+AƩributes: recordID, visitDate, chiefComplaint, diagnosis, icd10Code, severity, advice, 
+followUpDate, vitalSigns 
+Methods: createRecord(), updateRecord(), retrieveHistory() 
+RelaƟonships: 
+ 
+One medical record is linked to one appointment. 
+ 
+One medical record includes one prescripƟon and can trigger mulƟple lab test 
+orders. 
+ 
+PrescripƟon 
+Represents a formal prescripƟon issued by a doctor during a consultaƟon containing one or 
+more medicaƟon items. 
+AƩributes: prescripƟonID, issueDate, printTimestamp 
+Methods: addMedicaƟon(), printPrescripƟon() 
+RelaƟonships: 
+ 
+One prescripƟon belongs to one medical record and contains one or more 
+prescripƟon items. 
+ 
+ 
+PrescripƟonItem 
+Represents an individual medicaƟon entry within a prescripƟon including dosage and 
+administraƟon instrucƟons. 
+AƩributes: itemID, dosage, frequency, duraƟon, route, mealInstrucƟon 
+RelaƟonships: 
+ 
+Each prescripƟon item refers to one medicaƟon from the inventory. 
+ 
+MedicaƟon 
+Represents a medicine available in the clinic inventory with stock and expiry tracking. 
+AƩributes: medicaƟonID, name, category, stockQuanƟty, expiryDate, reorderLevel 
+Methods: checkAvailability(), updateStock(), checkExpiry() 
+RelaƟonships: 
+ 
+One medicaƟon can be referenced by mulƟple prescripƟon items. 
+ 
+MedicaƟon inventory is managed by Admin Staﬀ. 
+ 
+LabTestOrder 
+Represents a laboratory test order placed by a doctor for a paƟent during or aŌer 
+consultaƟon. 
+AƩributes: orderID, testType, priority, specialInstrucƟons, status, orderDate 
+Methods: placeOrder(), updateStatus(), noƟfyLabStaﬀ() 
+RelaƟonships: 
+ 
+One lab test order is linked to one medical record and produces at most one lab 
+result. 
+ 
+ 
+ 
+ 
+ 
+ 
+LabResult 
+Represents the test result entered by lab staﬀ for a speciﬁc lab test order including values, 
+units, reference ranges, and criƟcal value ﬂags. 
+AƩributes: resultID, resultValue, unit, referenceRange, isCriƟcal, entryDate, notes 
+Methods: enterResult(), generatePDF(), triggerAlert() 
+RelaƟonships: 
+ 
+Each lab result belongs to one lab test order and is entered by one lab staﬀ member. 
+ 
+Bill 
+Represents the itemized ﬁnancial bill generated for a paƟent aŌer a completed consultaƟon, 
+including all charges and current payment status. 
+AƩributes: billID, invoiceNumber, issueDate, consultaƟonCharge, labCharge, 
+medicaƟonCharge, procedureCharge, discount, tax, totalAmount, status 
+Methods: generateBill(), applyDiscount(), calculateTotal(), sendByEmail(), printBill() 
+RelaƟonships: 
+ 
+One bill is linked to one appointment and can be seƩled through mulƟple payments. 
+ 
+Payment 
+Represents a payment transacƟon made against a bill, recording the method, amount, and 
+transacƟon reference. 
+AƩributes: paymentID, amount, method, transacƟonRef, paymentDate 
+Methods: recordPayment(), generateReceipt() 
+RelaƟonships: 
+ 
+One payment belongs to one bill; mulƟple payments can be made against a single 
+bill. 
+ 
+ 

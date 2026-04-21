@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: camrs-backend
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/camrs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USER:root}
+    password: ${DB_PASS:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  sql:
+    init:
+      mode: never
+  security:
+    jwt:
+      secret: ${JWT_SECRET:8a4b2c1d3e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1}
+      expiration-ms: 1800000
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+server:
+  port: ${SERVER_PORT:8080}
+
+camrs:
+  notifications:
+    email-enabled: false
+  pdf:
+    output-dir: ${java.io.tmpdir}/camrs-pdfs

@@ -1,0 +1,616 @@
+Software Requirements Specification
+Clinic Appointment and Medical Records System
+(CAMRS)
+
+Introduction
+1.1
+Purpose
+This Software Requirements Specification (SRS) document provides a complete description of
+the Clinic Appointment and Medical Records System (CAMRS). The document describes the
+functional and non-functional requirements for Release 1.0 of the system. It is intended for the
+development team, project managers, quality assurance team, and stakeholders who need to
+understand the system’s capabilities and constraints.
+The CAMRS is designed to automate clinic operations by streamlining patient registration,
+appointment scheduling, medical record management, laboratory test tracking, and billing pro-
+cesses. This document serves as the foundation for system design, implementation, and testing.
+1.2
+Project Scope and Product Features
+1.2.1
+Project Overview
+A private healthcare clinic currently manages appointments manually and maintains paper-
+based medical records, leading to operational inefficiencies, data retrieval challenges, and sub-
+optimal patient care delivery.
+The CAMRS aims to transform these operations through a
+comprehensive digital solution that integrates patient management, appointment scheduling,
+medical record keeping, laboratory services, billing, and administrative functions into a unified
+web-based platform.
+The product will be a web-based application with role-based access control to accommodate
+different user types including patients, doctors, laboratory staff, and administrative person-
+nel. The multi-platform capability ensures accessibility from various devices without requiring
+platform-specific conversions.
+Role-based access ensures proper data security and workflow
+management, with each user class having appropriate permissions for their responsibilities.
+1.2.2
+Project Scope
+The CAMRS can be organized into five major functional areas: Patient Management, Ap-
+pointment Management, Medical Records Management, Laboratory Management, and Financial
+Management.
+Patient Management: The system provides online patient registration with comprehen-
+sive data capture including demographics, contact information, medical history, allergies, and
+insurance details. Each patient receives a unique identifier for system-wide tracking and data
+consistency.
+Appointment Management: Patients can book appointments based on doctor avail-
+ability, with the system managing doctor schedules including working hours, specializations,
+consultation fees, and leave management.
+Doctors can access daily appointment lists with
+complete patient information and appointment history.
+Medical Records Management: Following consultations, doctors record diagnoses, pre-
+scriptions, and medical advice in structured digital records linked to patient profiles. These
+records maintain complete visit history and support prescription generation with dosage in-
+structions.
+Laboratory Management: Laboratory staff can enter test results that automatically link
+to patient records. Patients can download laboratory reports through secure authentication,
+ensuring timely access to medical information.
+Financial Management: An integrated billing system calculates charges for consulta-
+tions, laboratory tests, medications, and procedures.
+The system generates invoices, tracks
+payments, manages outstanding balances, and provides comprehensive financial reporting for
+clinic management.
+CAMRS SRS
+5
+Administrative Functions: Administrative staff maintain system data including doc-
+tor profiles and schedules, medication inventory with expiration tracking and reorder alerts,
+and system-wide configurations. Comprehensive reporting supports operational decisions and
+regulatory compliance.
+1.3
+References
+1. Healthcare Information Technology Standards
+2. Medical Records Management Best Practices
+3. Patient Data Privacy Regulations
+4. Clinical Information Systems Documentation
+5. MySQL Database Documentation
+6. Web Application Security Standards
+7. Jmix Documentation
+8. PlantUML
+9. Practo
+2
+Overall Description
+2.1
+Product Perspective
+The clinic currently operates with manual appointment scheduling and paper-based record
+keeping, resulting in operational bottlenecks, potential data loss, and difficulties in retrieving
+patient information. The CAMRS addresses these challenges through digital transformation of
+clinic operations.
+The system will be developed following an agile methodology with iterative releases incorpo-
+rating stakeholder feedback. Initial functionality prioritizes core workflows (patient registration,
+appointment booking, basic medical records) with subsequent releases adding advanced features
+(reporting, analytics, inventory management). This approach manages development risk while
+delivering value incrementally.
+The development will span multiple phases with regular demonstrations to clinic staff, ensur-
+ing the system meets real-world operational needs and providing opportunities for requirement
+refinement based on user feedback.
+2.2
+User Classes and Characteristics
+User Class
+Description
+Patient
+Patients are end-users who register for clinic services, book
+appointments, view their medical records, download labo-
+ratory reports, and access billing information. They must
+authenticate using credentials provided during registration.
+Patients have limited access focused on their personal health
+information.
+CAMRS SRS
+6
+User Class
+Description
+Doctor
+Doctors manage patient consultations, access appointment
+schedules, create and update medical records, prescribe
+medications, order laboratory tests, and review test results.
+They require specialized access to clinical functions and pa-
+tient health data relevant to their care responsibilities.
+Laboratory Staff
+Laboratory personnel receive test orders from doctors, enter
+test results into the system, and manage test completion
+workflows. They have focused access to laboratory functions
+and relevant patient information needed for test processing.
+Administrative Staff
+Administrators have comprehensive system access to man-
+age doctor profiles and schedules, oversee medication in-
+ventory, handle system configuration, generate reports, and
+monitor overall system operations.
+They ensure smooth
+clinic operations and data integrity.
+2.3
+Operating Environment
+• OE-1: The system shall operate with the following web browsers: Chrome (version 90+),
+Firefox (version 88+), Safari (version 14+), and Edge (version 90+).
+• OE-2: The CAMRS shall run on a web server supporting SpringBoot environments.
+• OE-3: The CAMRS shall use MySQL 8.0+ for data storage and management.
+• OE-4: The system shall be accessible through both desktop and mobile web browsers with
+responsive design.
+• OE-5: The server infrastructure shall support HTTPS protocol for secure data transmis-
+sion.
+2.4
+Design and Implementation Constraints
+• CO-1: The system shall be accessible exclusively through web browsers without requiring
+client-side software installation.
+• CO-2: All data transmission must use encrypted connections.
+• CO-3: The system must comply with healthcare data privacy regulations and medical
+records retention requirements.
+• CO-4: User interface shall follow responsive design principles to ensure mobile device
+compatibility.
+• CO-5: The database schema shall support audit trails for all medical record modifications.
+• CO-6: System architecture shall support future integration with external laboratory in-
+formation systems and payment gateways.
+2.5
+User Documentation
+• UD-1: Comprehensive user manuals shall be provided for each user role (Patient, Doctor,
+Lab Staff, Administrator).
+• UD-2: Context-sensitive help shall be available throughout the application interface.
+CAMRS SRS
+7
+• UD-3: All documentation shall be web-accessible and regularly updated with system
+changes.
+2.6
+Assumptions and Dependencies
+Assumptions:
+• AS-1: Users have basic computer literacy and internet access.
+• AS-2: Clinic has reliable internet connectivity for uninterrupted system access.
+• AS-3: Patients provide accurate information during registration.
+• AS-4: Doctors and staff receive appropriate system training before deployment.
+Dependencies:
+• DE-1: System depends on MySQL database availability for all operations.
+• DE-2: Email notification features depend on third-party SMTP service integration.
+• DE-3: Payment processing depends on integration with payment gateway services.
+• DE-4: System security depends on proper SSL certificate configuration and maintenance.
+3
+System Features
+3.1
+Patient Registration and Profile Management
+3.1.1
+Description and Priority
+Patients can register online by providing personal information, medical history, insurance de-
+tails, and contact information. The system assigns unique patient IDs and maintains compre-
+hensive patient profiles accessible for future appointments and medical record tracking.
+3.1.2
+Stimulus/Response Sequences
+Stimulus: New patient accesses registration page.
+Response: System displays registration form requesting required information.
+Stimulus: Patient submits completed registration form.
+Response: System validates data, creates patient account, assigns unique ID, and sends login
+credentials.
+Stimulus: Registered patient requests to update profile information.
+Response: System displays current profile data in editable format and saves modifications.
+3.1.3
+Functional Requirements
+Feature Requirements: Patient Registration (FR-PR)
+Feature
+ID
+Feature Name
+Description
+FR-PR1
+Online Registration
+System shall allow new patients to regis-
+ter online with personal details, medical
+history, and insurance information.
+CAMRS SRS
+8
+Feature
+ID
+Feature Name
+Description
+FR-PR2
+Unique Patient ID
+System
+shall
+automatically
+assign
+a
+unique Patient ID upon successful regis-
+tration.
+FR-PR3
+Profile Updates
+System shall allow patients to update
+their contact information, insurance de-
+tails, and emergency contacts.
+FR-PR4
+Medical History
+System shall maintain complete medical
+history including allergies, chronic condi-
+tions, and past treatments.
+FR-PR5
+Data Validation
+System shall validate required fields and
+data
+formats
+(email,
+phone
+numbers,
+dates) during registration.
+3.2
+Appointment Scheduling and Management
+3.2.1
+Description and Priority
+Patients book appointments with doctors based on available time slots. The system manages
+doctor schedules including working hours, specializations, and leave periods. Doctors access
+daily appointment lists with patient information and appointment history.
+3.2.2
+Stimulus/Response Sequences
+Stimulus: Patient requests to book an appointment.
+Response: System displays available doctors with specializations and available time slots.
+Stimulus: Patient selects doctor and time slot.
+Response: System confirms booking, generates token number, and sends confirmation notifi-
+cation.
+Stimulus: Doctor logs in to view daily schedule.
+Response: System displays chronological list of appointments with patient details and reason
+for visit.
+Stimulus: Patient requests appointment cancellation.
+Response: System prompts for cancellation reason, updates appointment status, and notifies
+relevant parties.
+3.2.3
+Functional Requirements
+Feature Requirements: Appointment Management (FR-AM)
+Feature
+ID
+Feature Name
+Description
+FR-AM1
+Book Appointment
+System shall allow patients to book ap-
+pointments with available doctors based
+on real-time schedule availability.
+FR-AM2
+View Doctor Schedules
+System
+shall
+display
+doctor
+working
+hours, specializations, and consultation
+fees.
+FR-AM3
+Token Generation
+System shall generate unique token num-
+bers for each appointment for queue man-
+agement.
+CAMRS SRS
+9
+Feature
+ID
+Feature Name
+Description
+FR-AM4
+Appointment List
+System shall provide doctors with daily
+appointment lists including patient details
+and visit reasons.
+FR-AM5
+Reschedule Appointment
+System shall allow patients to reschedule
+appointments based on availability.
+FR-AM6
+Cancel Appointment
+System shall allow appointment cancella-
+tion with reason tracking and notification.
+FR-AM7
+Appointment Reminders
+System shall send email reminders to pa-
+tients 24 hours before appointments.
+FR-AM8
+Emergency Slots
+System shall support emergency appoint-
+ment booking outside regular schedules.
+3.3
+Medical Records Management
+3.3.1
+Description and Priority
+Doctors record diagnoses, prescriptions, and medical advice following consultations. Medical
+records are stored digitally and retrievable during future visits, supporting continuity of care
+and clinical decision-making.
+3.3.2
+Stimulus/Response Sequences
+Stimulus: Doctor completes patient consultation.
+Response: System provides medical record form for diagnosis, prescriptions, and notes entry.
+Stimulus: Doctor saves medical record.
+Response: System stores record linked to patient profile and appointment, generates prescrip-
+tion printout.
+Stimulus: Doctor requests patient medical history during consultation.
+Response: System displays chronological medical records including past diagnoses, prescrip-
+tions, and test results.
+3.3.3
+Functional Requirements
+Feature Requirements: Medical Records (FR-MR)
+Feature
+ID
+Feature Name
+Description
+FR-MR1
+Record Consultation
+System shall allow doctors to create med-
+ical records with diagnosis, prescriptions,
+and medical advice.
+FR-MR2
+Prescription Generation
+System shall generate prescription print-
+outs with medication names, dosages, fre-
+quency, and instructions.
+FR-MR3
+Medical History Access
+System shall provide doctors with com-
+plete patient medical history during con-
+sultations.
+FR-MR4
+Diagnosis Coding
+System shall support ICD-10 diagnosis
+coding for standardized disease classifica-
+tion.
+CAMRS SRS
+10
+Feature
+ID
+Feature Name
+Description
+FR-MR5
+Medical Record Retrieval
+System shall allow authorized users to
+search and retrieve medical records by pa-
+tient, date, or diagnosis.
+FR-MR6
+Record Modification
+System shall maintain audit trails of all
+medical record modifications with user
+identification and timestamps.
+3.4
+Laboratory Test Management
+3.4.1
+Description and Priority
+Laboratory staff enter test results that link automatically to patient records. Patients download
+test reports through authenticated access, ensuring timely information availability for treatment
+decisions.
+3.4.2
+Stimulus/Response Sequences
+Stimulus: Doctor orders laboratory test for patient.
+Response: System creates test order, notifies laboratory staff, and generates test request form.
+Stimulus: Laboratory staff enters test results.
+Response: System stores results linked to patient record, notifies doctor and patient of com-
+pletion.
+Stimulus: Patient requests to download test report.
+Response: System authenticates user, provides downloadable PDF report with results and
+reference ranges.
+3.4.3
+Functional Requirements
+Feature Requirements: Laboratory Management (FR-LM)
+Feature
+ID
+Feature Name
+Description
+FR-LM1
+Test Orders
+System shall allow doctors to order lab-
+oratory tests with specific test types and
+instructions.
+FR-LM2
+Result Entry
+System shall allow laboratory staff to en-
+ter test results with values, units, and ref-
+erence ranges.
+FR-LM3
+Critical Alerts
+System shall flag critical test results and
+send immediate notifications to doctors.
+FR-LM4
+Report Download
+System shall allow patients to download
+laboratory reports in PDF format through
+secure login.
+FR-LM5
+Test History
+System shall maintain complete labora-
+tory test history linked to patient records.
+FR-LM6
+Test Status Tracking
+System shall track test order status from
+order placement through result delivery.
+CAMRS SRS
+11
+3.5
+Billing and Payment Management
+3.5.1
+Description and Priority
+The billing system calculates charges based on consultations, laboratory tests, medications,
+and procedures. Bills can be printed or transmitted electronically, with payment tracking and
+outstanding balance management.
+3.5.2
+Stimulus/Response Sequences
+Stimulus: Appointment consultation is completed.
+Response: System automatically generates bill itemizing consultation fees, medications, tests,
+and procedures.
+Stimulus: Patient requests bill details.
+Response: System displays itemized bill with payment status and outstanding balance.
+Stimulus: Payment is recorded.
+Response: System updates bill status, generates receipt, and sends confirmation email.
+3.5.3
+Functional Requirements
+Feature Requirements: Billing Management (FR-BM)
+Feature
+ID
+Feature Name
+Description
+FR-BM1
+Automatic Bill Generation
+System shall automatically calculate bills
+based on consultation fees, lab charges,
+medications, and procedures.
+FR-BM2
+Itemized Billing
+System shall display detailed bill break-
+downs with individual charge components.
+FR-BM3
+Payment Processing
+System
+shall
+record
+payments
+with
+method (cash, card, insurance) and gen-
+erate receipts.
+FR-BM4
+Outstanding Balance
+System shall track unpaid and partially
+paid bills with due dates and overdue
+alerts.
+FR-BM5
+Bill Distribution
+System shall provide bill printing and
+email delivery options.
+FR-BM6
+Payment History
+System shall maintain complete payment
+transaction history for each patient.
+3.6
+Administrative Functions and Reporting
+3.6.1
+Description and Priority
+Administrative staff manage doctor profiles and schedules, maintain medication inventory, and
+generate comprehensive reports for operational insights and decision-making support.
+3.6.2
+Stimulus/Response Sequences
+Stimulus: Administrator adds new doctor profile.
+Response: System creates doctor account with credentials, schedule, and specialization infor-
+mation.
+Stimulus: Administrator updates medication inventory.
+Response: System records stock changes, checks reorder levels, and generates low-stock alerts.
+CAMRS SRS
+12
+Stimulus: Administrator requests financial report.
+Response: System generates report with revenue statistics, outstanding payments, and expense
+analysis.
+3.6.3
+Functional Requirements
+Feature Requirements: Administration and Reporting (FR-AR)
+Feature
+ID
+Feature Name
+Description
+FR-AR1
+Doctor Management
+System shall allow administrators to add,
+update, and deactivate doctor profiles and
+schedules.
+FR-AR2
+Inventory Management
+System shall track medication stock levels
+with expiration dates and reorder alerts.
+FR-AR3
+Consultation Statistics
+System shall generate doctor-wise reports
+showing patient counts and revenue gen-
+erated.
+FR-AR4
+Disease Statistics
+System shall provide diagnosis-based re-
+ports for epidemiological analysis and re-
+search.
+FR-AR5
+Outstanding Payments
+System shall generate reports listing pa-
+tients
+with
+unpaid
+bills
+and
+overdue
+amounts.
+FR-AR6
+Revenue Reports
+System shall provide monthly/quarterly
+revenue analysis with category break-
+downs.
+FR-AR7
+Appointment Analytics
+System shall report appointment statistics
+including completed, cancelled, and no-
+show rates.
+4
+External Interface Requirements
+4.1
+User Interfaces
+• UI-1: The system shall provide role-based dashboards tailored to each user class (Patient,
+Doctor, Lab Staff, Administrator).
+• UI-2: All interfaces shall follow responsive design principles ensuring usability on desktop
+and mobile devices.
+• UI-3: The system shall provide intuitive navigation with clear menu structures and bread-
+crumb trails.
+• UI-4: Forms shall include inline validation with clear error messages for user input cor-
+rections.
+4.2
+Hardware Interfaces
+No hardware interfaces have been identified.
+CAMRS SRS
+13
+4.3
+Software Interfaces
+• SI-1: MySQL Database System version 8.0+
+– SI-1.1: All data persistence operations shall use MySQL for storage and retrieval.
+– SI-1.2: Database connections shall use connection pooling for performance optimiza-
+tion.
+• SI-2: Email Service Integration
+– SI-2.1: System shall integrate with SMTP servers for email notifications.
+• SI-3: Payment Gateway
+– SI-3.1: System architecture shall support integration with payment gateway APIs.
+– SI-3.2: Payment transactions shall be secured and logged for audit purposes.
+4.4
+Communications Interfaces
+• CI-1: All client-server communication shall use HTTPS protocol with TLS 1.2 or higher.
+• CI-2: API endpoints shall follow RESTful design principles for potential third-party in-
+tegrations.
+• CI-3: Real-time notifications shall use WebSocket or Server-Sent Events for appointment
+updates.
+5
+Other Nonfunctional Requirements
+5.1
+Documentation Requirements
+• DR-1: System shall include comprehensive user manuals for all user roles.
+• DR-2: Administrator documentation shall include system configuration, backup proce-
+dures, and troubleshooting guides.
+• DR-3: Database schema documentation shall include entity relationships and data dictio-
+nary.
+5.2
+Performance Requirements
+• PR-1: System shall support at least 100 concurrent users without performance degrada-
+tion.
+• PR-2: Page load time shall not exceed 3 seconds under normal network conditions.
+• PR-3: Database queries shall execute within 3 seconds for standard operations.
+5.3
+Safety Requirements
+• SR-1: Critical patient data modifications shall require confirmation dialogs to prevent
+accidental changes.
+• SR-2: System shall maintain transaction logs enabling audit and recovery.
+• SR-3: Medication inventory alerts shall prevent dispensing of expired or low-stock items.
+CAMRS SRS
+14
+5.4
+Security Requirements
+• SE-1: All user passwords shall be hashed using industry-standard algorithms.
+• SE-2: System shall implement role-based access control ensuring users access only autho-
+rized functions and data.
+• SE-3: Patient medical records shall be accessible only to authorized medical personnel
+and the patient.
+• SE-4: System shall enforce session timeouts after 30 minutes of inactivity.
+• SE-5: All data transmissions shall be encrypted using HTTPS protocols.
+• SE-6: Failed login attempts shall be limited with account lockout mechanisms after 5
+consecutive failures.
+5.5
+Software Quality Attributes
+• Availability-1: System shall maintain 97% uptime during clinic operating hours (8:00
+AM - 8:00 PM local time, Monday-Saturday).
+• Availability-2: System shall implement graceful degradation, maintaining core functions
+during partial system failures.
+• Reliability-1: System shall maintain data integrity with transaction rollback capabilities
+on failures.
+• Reliability-2: Mean time between failures (MTBF) shall exceed 720 hours of continuous
+operation.
+• Maintainability-1: System code shall follow established coding standards with compre-
+hensive comments.

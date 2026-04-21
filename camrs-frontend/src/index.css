@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* === CAMRS Rich Earthy Palette — NOT washed out === */
+  --background: #F4F6F0;
+  --foreground: #0B1D3A;
+  --card: #FFFFFF;
+  --card-foreground: #0B1D3A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0B1D3A;
+  --primary: #0B1D3A;
+  --primary-foreground: #FAFAF9;
+  --secondary: #E3E7DC;
+  --secondary-foreground: #0B1D3A;
+  --muted: #E3E7DC;
+  --muted-foreground: #67715F;
+  --accent: #E3E7DC;
+  --accent-foreground: #0B1D3A;
+  --destructive: #B84233;
+  --destructive-foreground: #FAFAF9;
+  --border: #D1D6C9;
+  --input: #E3E7DC;
+  --ring: #5A6B47;
+
+  /* Charts */
+  --chart-1: #5A6B47;
+  --chart-2: #0B1D3A;
+  --chart-3: #8B9A7B;
+  --chart-4: #2D4C7A;
+  --chart-5: #475438;
+
+  /* Sidebar */
+  --sidebar: #0B1D3A;
+  --sidebar-foreground: #FAFAF9;
+  --sidebar-primary: #5A6B47;
+  --sidebar-primary-foreground: #FAFAF9;
+  --sidebar-accent: #172D4C;
+  --sidebar-accent-foreground: #FAFAF9;
+  --sidebar-border: #172D4C;
+  --sidebar-ring: #5A6B47;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Georgia', 'Cambria', 'Times New Roman', serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+
+  /* Radius */
+  --radius: 0.625rem;
+
+  /* Shadows — warm */
+  --shadow-2xs: 0px 1px 2px 0px hsla(30, 20%, 15%, 0.05);
+  --shadow-xs: 0px 1px 3px 0px hsla(30, 20%, 15%, 0.08);
+  --shadow-sm: 0px 1px 3px 0px hsla(30, 20%, 15%, 0.1), 0px 1px 2px -1px hsla(30, 20%, 15%, 0.08);
+  --shadow: 0px 1px 3px 0px hsla(30, 20%, 15%, 0.12), 0px 2px 4px -1px hsla(30, 20%, 15%, 0.08);
+  --shadow-md: 0px 2px 6px 0px hsla(30, 20%, 15%, 0.12), 0px 4px 8px -2px hsla(30, 20%, 15%, 0.08);
+  --shadow-lg: 0px 4px 12px 0px hsla(30, 20%, 15%, 0.14), 0px 8px 16px -4px hsla(30, 20%, 15%, 0.08);
+  --shadow-xl: 0px 8px 24px 0px hsla(30, 20%, 15%, 0.16), 0px 16px 32px -4px hsla(30, 20%, 15%, 0.1);
+  --shadow-2xl: 0px 16px 48px 0px hsla(30, 20%, 15%, 0.2);
+
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+  --shadow-offset-x: 0px;
+  --shadow-offset-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.1;
+  --shadow-color: hsla(30, 20%, 15%, 0.1);
+  --letter-spacing: 0em;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Rich earthy direct-use colors mapped to Olive/Oxford */
+  --color-terracotta: #5A6B47;
+  --color-terracotta-deep: #435232;
+  --color-terracotta-light: #8B9A7B;
+  --color-oxford: #0B1D3A;
+  --color-oxford-light: #2D4C7A;
+  --color-rustic: #475438;
+  --color-rustic-deep: #323D26;
+  --color-rustic-light: #A4B294;
+  --color-peach: #E4E8DF;
+  --color-peach-light: #F4F6F0;
+  --color-warm-bg: #F4F6F0;
+  --color-cream: #E3E7DC;
+  --color-espresso: #0B1D3A;
+  --color-caramel: #768762;
+  --color-sienna: #3B4B2A;
+  --color-walnut: #1A2E46;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --font-serif: 'Georgia', 'Cambria', 'Times New Roman', serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+  --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+  --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+  --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+  --radius: 0.625rem;
+  --spacing: var(--spacing);
+  --letter-spacing: var(--letter-spacing);
+  --shadow-offset-y: var(--shadow-offset-y);
+  --shadow-offset-x: var(--shadow-offset-x);
+  --shadow-spread: var(--shadow-spread);
+  --shadow-blur: var(--shadow-blur);
+  --shadow-opacity: var(--shadow-opacity);
+  --color-shadow-color: var(--shadow-color);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    letter-spacing: var(--tracking-normal);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Native <select> elements */
+  select {
+    background-color: var(--input);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  select option {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
+
+  /* Scrollbar — rich earthy */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
