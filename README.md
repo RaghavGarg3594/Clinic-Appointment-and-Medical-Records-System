@@ -254,15 +254,6 @@ All default accounts use the password: **`password123`**
 
 Base URL: `http://localhost:8080/api`
 
-### Authentication
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/auth/register` | Register new patient | ❌ |
-| `POST` | `/auth/login` | Login and receive JWT | ❌ |
-| `POST` | `/auth/logout` | Logout | ❌ |
-| `POST` | `/auth/forgot-password` | Reset password by name + DOB | ❌ |
-| `POST` | `/auth/doctor-request` | Submit doctor join request | ❌ |
-
 ### Appointments
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
