@@ -18,6 +18,8 @@ public class BillResponse {
     private String status;
     private Boolean hasPendingLabTests;
     private Boolean hasLabReport;
+    private BigDecimal paidAmount;
+    private BigDecimal dueAmount;
 
     public BillResponse() {}
 
@@ -49,4 +51,8 @@ public class BillResponse {
     public void setHasPendingLabTests(Boolean hasPendingLabTests) { this.hasPendingLabTests = hasPendingLabTests; }
     public Boolean getHasLabReport() { return hasLabReport; }
     public void setHasLabReport(Boolean hasLabReport) { this.hasLabReport = hasLabReport; }
+    public BigDecimal getPaidAmount() { return paidAmount; }
+    public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
+    public BigDecimal getDueAmount() { return dueAmount; }
+    public void setDueAmount(BigDecimal dueAmount) { this.dueAmount = dueAmount; }
 }

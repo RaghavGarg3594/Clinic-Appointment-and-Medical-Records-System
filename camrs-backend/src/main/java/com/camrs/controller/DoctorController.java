@@ -20,12 +20,14 @@ public class DoctorController {
     private final AdminService adminService;
     private final PdfGenerationService pdfGenerationService;
     private final ConsultationService consultationService;
+    private final com.camrs.service.LabService labService;
 
     public DoctorController(AdminService adminService, PdfGenerationService pdfGenerationService,
-                            ConsultationService consultationService) {
+                            ConsultationService consultationService, com.camrs.service.LabService labService) {
         this.adminService = adminService;
         this.pdfGenerationService = pdfGenerationService;
         this.consultationService = consultationService;
+        this.labService = labService;
     }
 
     @GetMapping
@@ -46,6 +48,13 @@ public class DoctorController {
     public ResponseEntity<List<MedicalRecordResponse>> getMyPatientRecords() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(consultationService.getDoctorRecords(email));
+    }
+
+    @GetMapping("/me/lab-results")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<List<LabOrderResponse>> getMyLabResults() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(labService.getDoctorLabResults(email));
     }
 
     @GetMapping("/prescriptions/{recordId}/pdf")
@@ -104,4 +113,3 @@ public class DoctorController {
         }
     }
 }
-

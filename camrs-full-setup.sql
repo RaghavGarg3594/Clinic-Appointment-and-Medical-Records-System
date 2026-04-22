@@ -179,6 +179,7 @@ CREATE TABLE Medication (
     stock_quantity INT DEFAULT 0,
     reorder_level INT DEFAULT 10,
     expiry_date DATE,
+    price DECIMAL(10,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_medication_stock (stock_quantity)
@@ -395,32 +396,32 @@ SET @lab_uid = LAST_INSERT_ID();
 INSERT INTO Staff (user_id, first_name, last_name, department, staff_type)
 VALUES (@lab_uid, 'Neha', 'Verma', 'Laboratory', 'LAB');
 
-INSERT INTO Medication (name, category, stock_quantity, reorder_level, expiry_date) VALUES
-('Paracetamol 500mg',  'Analgesic',        500, 50, '2027-12-31'),
-('Amoxicillin 250mg',  'Antibiotic',        300, 30, '2027-06-30'),
-('Omeprazole 20mg',    'Antacid',           200, 20, '2027-09-30'),
-('Metformin 500mg',    'Antidiabetic',      400, 40, '2027-12-31'),
-('Amlodipine 5mg',     'Antihypertensive',  250, 25, '2027-10-31'),
-('Ibuprofen 400mg',    'Analgesic',         350, 35, '2027-11-30'),
-('Cetirizine 10mg',    'Antihistamine',     400, 40, '2027-12-31'),
-('Azithromycin 500mg', 'Antibiotic',        200, 20, '2027-08-31'),
-('Ciprofloxacin 500mg','Antibiotic',        250, 25, '2027-07-31'),
-('Doxycycline 100mg',  'Antibiotic',        300, 30, '2027-09-30'),
-('Pantoprazole 40mg',  'Antacid',           350, 35, '2027-10-31'),
-('Ranitidine 150mg',   'Antacid',           300, 30, '2027-06-30'),
-('Losartan 50mg',      'Antihypertensive',  200, 20, '2027-12-31'),
-('Atorvastatin 10mg',  'Lipid-lowering',    250, 25, '2027-11-30'),
-('Montelukast 10mg',   'Antiasthmatic',     200, 20, '2027-10-31'),
-('Salbutamol 4mg',     'Bronchodilator',    300, 30, '2027-12-31'),
-('Prednisolone 5mg',   'Corticosteroid',    200, 20, '2027-08-31'),
-('Diclofenac 50mg',    'Analgesic',         350, 35, '2027-09-30'),
-('Clopidogrel 75mg',   'Antiplatelet',      200, 20, '2027-12-31'),
-('Aspirin 75mg',       'Antiplatelet',      400, 40, '2027-12-31'),
-('Domperidone 10mg',   'Antiemetic',        300, 30, '2027-07-31'),
-('Ondansetron 4mg',    'Antiemetic',        200, 20, '2027-10-31'),
-('Metoclopramide 10mg','Antiemetic',        250, 25, '2027-08-31'),
-('Loperamide 2mg',     'Antidiarrhoeal',    300, 30, '2027-11-30'),
-('Fluconazole 150mg',  'Antifungal',        200, 20, '2027-09-30');
+INSERT INTO Medication (name, category, stock_quantity, reorder_level, expiry_date, price) VALUES
+('Paracetamol 500mg',  'Analgesic',        500, 50, '2027-12-31', 5.00),
+('Amoxicillin 250mg',  'Antibiotic',        300, 30, '2027-06-30', 12.00),
+('Omeprazole 20mg',    'Antacid',           200, 20, '2027-09-30', 8.50),
+('Metformin 500mg',    'Antidiabetic',      400, 40, '2027-12-31', 6.00),
+('Amlodipine 5mg',     'Antihypertensive',  250, 25, '2027-10-31', 7.50),
+('Ibuprofen 400mg',    'Analgesic',         350, 35, '2027-11-30', 6.50),
+('Cetirizine 10mg',    'Antihistamine',     400, 40, '2027-12-31', 4.00),
+('Azithromycin 500mg', 'Antibiotic',        200, 20, '2027-08-31', 18.00),
+('Ciprofloxacin 500mg','Antibiotic',        250, 25, '2027-07-31', 15.00),
+('Doxycycline 100mg',  'Antibiotic',        300, 30, '2027-09-30', 10.00),
+('Pantoprazole 40mg',  'Antacid',           350, 35, '2027-10-31', 9.00),
+('Ranitidine 150mg',   'Antacid',           300, 30, '2027-06-30', 5.50),
+('Losartan 50mg',      'Antihypertensive',  200, 20, '2027-12-31', 8.00),
+('Atorvastatin 10mg',  'Lipid-lowering',    250, 25, '2027-11-30', 10.00),
+('Montelukast 10mg',   'Antiasthmatic',     200, 20, '2027-10-31', 12.00),
+('Salbutamol 4mg',     'Bronchodilator',    300, 30, '2027-12-31', 7.00),
+('Prednisolone 5mg',   'Corticosteroid',    200, 20, '2027-08-31', 6.00),
+('Diclofenac 50mg',    'Analgesic',         350, 35, '2027-09-30', 5.00),
+('Clopidogrel 75mg',   'Antiplatelet',      200, 20, '2027-12-31', 14.00),
+('Aspirin 75mg',       'Antiplatelet',      400, 40, '2027-12-31', 3.00),
+('Domperidone 10mg',   'Antiemetic',        300, 30, '2027-07-31', 5.50),
+('Ondansetron 4mg',    'Antiemetic',        200, 20, '2027-10-31', 8.00),
+('Metoclopramide 10mg','Antiemetic',        250, 25, '2027-08-31', 4.50),
+('Loperamide 2mg',     'Antidiarrhoeal',    300, 30, '2027-11-30', 6.00),
+('Fluconazole 150mg',  'Antifungal',        200, 20, '2027-09-30', 20.00);
 
 -- LAB TEST TYPES
 INSERT INTO LabTestType (test_name, test_code, category, sample_type, cost, normal_range_male, normal_range_female, unit, turnaround_time, is_active) VALUES

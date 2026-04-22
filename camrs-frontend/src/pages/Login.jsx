@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { Activity, CalendarHeart, ClipboardList, Beaker, ShieldCheck, ArrowRight } from 'lucide-react';
 
@@ -15,6 +16,17 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forgot password state
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [fpFirstName, setFpFirstName] = useState('');
+  const [fpLastName, setFpLastName] = useState('');
+  const [fpDob, setFpDob] = useState('');
+  const [fpNewPassword, setFpNewPassword] = useState('');
+  const [fpConfirmPassword, setFpConfirmPassword] = useState('');
+  const [fpMessage, setFpMessage] = useState('');
+  const [fpError, setFpError] = useState('');
+  const [fpLoading, setFpLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -37,9 +49,38 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login failed:', err);
-      setError('Invalid email or password');
+      const msg = err.response?.data?.message || 'Invalid email or password';
+      setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setFpError(''); setFpMessage(''); setFpLoading(true);
+    if (fpNewPassword !== fpConfirmPassword) {
+      setFpError('Passwords do not match.');
+      setFpLoading(false);
+      return;
+    }
+    if (fpNewPassword.length < 6) {
+      setFpError('Password must be at least 6 characters.');
+      setFpLoading(false);
+      return;
+    }
+    try {
+      const res = await api.post('/auth/forgot-password', {
+        firstName: fpFirstName,
+        lastName: fpLastName,
+        dateOfBirth: fpDob,
+        newPassword: fpNewPassword,
+      });
+      setFpMessage(res.data.message);
+    } catch (err) {
+      setFpError(err.response?.data?.message || 'Failed to reset password. Please check your details.');
+    } finally {
+      setFpLoading(false);
     }
   };
 
@@ -174,6 +215,13 @@ const Login = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="font-semibold">Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => { setForgotOpen(true); setFpMessage(''); setFpError(''); }}
+                      className="text-xs text-oxford hover:underline font-medium"
+                    >
+                      Forgot Password?
+                    </button>
                   </div>
                   <Input
                     id="password"
@@ -222,6 +270,60 @@ const Login = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-4">
+            Enter your name and date of birth to reset your password.
+          </p>
+
+          {fpMessage && (
+            <Alert className="mb-4 border-primary/30 bg-primary/10 text-primary-foreground">
+              <AlertDescription>{fpMessage}</AlertDescription>
+            </Alert>
+          )}
+          {fpError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{fpError}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>First Name</Label>
+                <Input value={fpFirstName} onChange={e => setFpFirstName(e.target.value)} placeholder="Rahul" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name</Label>
+                <Input value={fpLastName} onChange={e => setFpLastName(e.target.value)} placeholder="Kumar" required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Date of Birth</Label>
+              <Input type="date" value={fpDob} onChange={e => setFpDob(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input type="password" value={fpNewPassword} onChange={e => setFpNewPassword(e.target.value)} placeholder="Min. 6 characters" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirm Password</Label>
+              <Input type="password" value={fpConfirmPassword} onChange={e => setFpConfirmPassword(e.target.value)} placeholder="Re-enter password" required />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" className="flex-1 bg-oxford hover:bg-oxford/90" disabled={fpLoading}>
+                {fpLoading ? 'Resetting...' : 'Reset Password'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>Cancel</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

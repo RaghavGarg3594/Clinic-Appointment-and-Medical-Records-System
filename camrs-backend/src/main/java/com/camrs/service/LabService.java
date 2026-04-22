@@ -22,13 +22,15 @@ public class LabService {
     private final NotificationService notificationService;
     private final MedicalRecordRepository medicalRecordRepository;
     private final BillRepository billRepository;
+    private final EmailService emailService;
 
     public LabService(LabTestOrderRepository labTestOrderRepository, LabResultRepository labResultRepository,
                       LabTestTypeRepository labTestTypeRepository, AppointmentRepository appointmentRepository,
                       DoctorRepository doctorRepository,
                       UserRepository userRepository, PatientRepository patientRepository,
                       NotificationService notificationService,
-                      MedicalRecordRepository medicalRecordRepository, BillRepository billRepository) {
+                      MedicalRecordRepository medicalRecordRepository, BillRepository billRepository,
+                      EmailService emailService) {
         this.labTestOrderRepository = labTestOrderRepository;
         this.labResultRepository = labResultRepository;
         this.labTestTypeRepository = labTestTypeRepository;
@@ -39,6 +41,7 @@ public class LabService {
         this.notificationService = notificationService;
         this.medicalRecordRepository = medicalRecordRepository;
         this.billRepository = billRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -158,6 +161,16 @@ public class LabService {
     public LabOrderResponse markSampleCollected(Integer orderId) {
         LabTestOrder order = labTestOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Lab order not found"));
+
+        // Block sample collection if the bill is not paid (like doctor consultation payment gate)
+        if (order.getMedicalRecord() != null && order.getMedicalRecord().getAppointment() != null) {
+            Integer apptId = order.getMedicalRecord().getAppointment().getId();
+            java.util.Optional<Bill> billOpt = billRepository.findByAppointmentId(apptId);
+            if (billOpt.isPresent() && billOpt.get().getStatus() != Bill.BillStatus.PAID) {
+                throw new RuntimeException("Cannot collect sample: the patient's bill must be marked as PAID by admin first.");
+            }
+        }
+
         order.setStatus(LabTestOrder.TestStatus.SAMPLE_COLLECTED);
         return mapToResponse(labTestOrderRepository.save(order));
     }
@@ -202,6 +215,15 @@ public class LabService {
                 order.getTestType(),
                 result.getIsCritical() != null && result.getIsCritical());
 
+        // Send critical lab result email to patient
+        if (result.getIsCritical() != null && result.getIsCritical()) {
+            String patientName = order.getPatient().getFirstName() + " " + order.getPatient().getLastName();
+            emailService.sendCriticalLabResult(
+                    order.getPatient().getEmail(), patientName,
+                    order.getTestType(), result.getResultValue(),
+                    result.getUnit(), result.getReferenceRange());
+        }
+
         return mapToResponse(order);
     }
 
@@ -215,6 +237,31 @@ public class LabService {
         List<LabTestOrder> orders;
         try {
             orders = labTestOrderRepository.findByPatientId(patient.getId());
+        } catch (Exception e) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<LabOrderResponse> responses = new java.util.ArrayList<>();
+        for (LabTestOrder order : orders) {
+            try {
+                responses.add(mapToResponse(order));
+            } catch (Exception e) {
+                // Skip corrupt records
+            }
+        }
+        return responses;
+    }
+
+    @Transactional(readOnly = true)
+    public List<LabOrderResponse> getDoctorLabResults(String doctorEmail) {
+        User user = userRepository.findByEmail(doctorEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        com.camrs.entity.Doctor doctor = doctorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        List<LabTestOrder> orders;
+        try {
+            orders = labTestOrderRepository.findByDoctorIdWithDetails(doctor.getId());
         } catch (Exception e) {
             return java.util.Collections.emptyList();
         }
@@ -260,6 +307,19 @@ public class LabService {
 
             // Auto-flag against reference range
             resp.setResultFlag(computeResultFlag(r.getResultValue(), r.getReferenceRange()));
+        }
+
+        // Populate billPaid flag for the frontend
+        try {
+            if (order.getMedicalRecord() != null && order.getMedicalRecord().getAppointment() != null) {
+                Integer apptId = order.getMedicalRecord().getAppointment().getId();
+                java.util.Optional<Bill> billOpt = billRepository.findByAppointmentId(apptId);
+                resp.setBillPaid(billOpt.isPresent() && billOpt.get().getStatus() == Bill.BillStatus.PAID);
+            } else {
+                resp.setBillPaid(false);
+            }
+        } catch (Exception e) {
+            resp.setBillPaid(false);
         }
 
         return resp;

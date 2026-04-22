@@ -75,8 +75,8 @@ const AdminBilling = () => {
     }
   };
 
-  const totalRevenue = bills.reduce((sum, b) => sum + (b.status === 'PAID' ? parseFloat(b.totalAmount || 0) : 0), 0);
-  const totalUnpaid = bills.reduce((sum, b) => sum + (b.status !== 'PAID' ? parseFloat(b.totalAmount || 0) : 0), 0);
+  const totalRevenue = bills.reduce((sum, b) => sum + parseFloat(b.paidAmount || 0), 0);
+  const totalUnpaid = bills.reduce((sum, b) => sum + (b.status !== 'PAID' ? parseFloat(b.dueAmount || 0) : 0), 0);
 
   const stats = [
     { label: 'Total Revenue (Paid)', value: `₹${totalRevenue.toFixed(2)}`, color: 'text-oxford', accent: 'border-l-oxford' },
@@ -137,8 +137,16 @@ const AdminBilling = () => {
                         {bill.labCharge > 0 && <div>Lab: ₹{bill.labCharge}</div>}
                         {bill.tax > 0 && <div>Tax (12%): ₹{bill.tax}</div>}
                         {bill.discount > 0 && <div className="text-terracotta font-bold">- Discount: ₹{bill.discount}</div>}
+                        {bill.paidAmount > 0 && bill.status === 'UNPAID' && (
+                          <div className="text-green-600 font-semibold mt-1 border-t border-border pt-1">✓ Already Paid: ₹{bill.paidAmount}</div>
+                        )}
                       </TableCell>
-                      <TableCell className="font-semibold text-lg">₹{bill.totalAmount}</TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-lg">₹{bill.totalAmount}</div>
+                        {bill.status === 'UNPAID' && bill.paidAmount > 0 && (
+                          <div className="text-destructive font-bold text-sm">Due: ₹{bill.dueAmount}</div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={billStatusVariant(bill.status)}>{bill.status}</Badge>
                       </TableCell>

@@ -17,6 +17,7 @@ public class LabOrderResponse {
     private Boolean isCritical;
     private String notes;
     private String resultFlag;
+    private Boolean billPaid;
 
     public LabOrderResponse() {}
 
@@ -48,4 +49,6 @@ public class LabOrderResponse {
     public void setNotes(String notes) { this.notes = notes; }
     public String getResultFlag() { return resultFlag; }
     public void setResultFlag(String resultFlag) { this.resultFlag = resultFlag; }
+    public Boolean getBillPaid() { return billPaid; }
+    public void setBillPaid(Boolean billPaid) { this.billPaid = billPaid; }
 }

@@ -61,10 +61,14 @@ const DoctorAppointments = () => {
   const [consultSuccess, setConsultSuccess] = useState('');
   const [consultError, setConsultError] = useState('');
 
-  // ICD-10 search
-  const [icd10Results, setIcd10Results] = useState([]);
+  // ICD-10 preloaded list
+  const [allIcd10Codes, setAllIcd10Codes] = useState([]);
   const [icd10Query, setIcd10Query] = useState('');
   const [icd10Open, setIcd10Open] = useState(false);
+
+  // Medication search
+  const [medSearches, setMedSearches] = useState({});
+  const [medOpenIdx, setMedOpenIdx] = useState(null);
 
   // Allergy check
   const [allergyWarnings, setAllergyWarnings] = useState([]);
@@ -126,18 +130,21 @@ const DoctorAppointments = () => {
     setLastPrescription(null);
     setShowLastRx(false);
     setIcd10Query('');
-    setIcd10Results([]);
+    setMedSearches({});
+    setMedOpenIdx(null);
     setAllergyWarnings([]);
     setShowAllergyDialog(false);
     setPendingSubmit(null);
 
     try {
-      const [medsRes, labsRes] = await Promise.all([
+      const [medsRes, labsRes, icd10Res] = await Promise.all([
         api.get('/consultations/medications'),
-        api.get('/lab/types')
+        api.get('/lab/types'),
+        api.get('/consultations/icd10'),
       ]);
       setMedications(medsRes.data);
       setLabTests(labsRes.data);
+      setAllIcd10Codes(icd10Res.data);
     } catch (err) { console.error('Could not load lookup data:', err); }
 
     // Fetch last prescription for this patient
@@ -180,20 +187,32 @@ const DoctorAppointments = () => {
   };
   const removeLabTest = (idx) => setOrderedLabTests(orderedLabTests.filter((_, i) => i !== idx));
 
-  const searchIcd10 = async (query) => {
-    setIcd10Query(query);
-    if (query.length < 1) { setIcd10Results([]); setIcd10Open(false); return; }
-    try {
-      const res = await api.get(`/consultations/icd10?q=${encodeURIComponent(query)}`);
-      setIcd10Results(res.data);
-      setIcd10Open(true);
-    } catch (err) { console.error(err); }
-  };
+  // ICD-10: local filter on preloaded list
+  const filteredIcd10 = icd10Query.length > 0
+    ? allIcd10Codes.filter(c =>
+        c.code.toLowerCase().includes(icd10Query.toLowerCase()) ||
+        c.description.toLowerCase().includes(icd10Query.toLowerCase())
+      )
+    : allIcd10Codes;
 
   const selectIcd10 = (code) => {
     setConsultForm({ ...consultForm, icd10Code: code.code, diagnosis: code.description });
     setIcd10Query(`${code.code} — ${code.description}`);
     setIcd10Open(false);
+  };
+
+  // Medication search helpers
+  const getMedSearch = (idx) => medSearches[idx] || '';
+  const setMedSearch = (idx, val) => setMedSearches({ ...medSearches, [idx]: val });
+  const filteredMeds = (idx) => {
+    const q = getMedSearch(idx).toLowerCase();
+    if (!q) return medications;
+    return medications.filter(m => m.name.toLowerCase().includes(q));
+  };
+  const selectMedication = (idx, med) => {
+    updateItem(idx, 'medicationId', String(med.id));
+    setMedSearch(idx, med.name);
+    setMedOpenIdx(null);
   };
 
   const handleConsultSubmit = async (e) => {
@@ -461,16 +480,17 @@ const DoctorAppointments = () => {
                 <Input
                   value={icd10Query || consultForm.diagnosis}
                   onChange={e => {
-                    searchIcd10(e.target.value);
+                    setIcd10Query(e.target.value);
                     setConsultForm({ ...consultForm, diagnosis: e.target.value, icd10Code: '' });
+                    setIcd10Open(true);
                   }}
-                  onFocus={() => icd10Query.length > 0 && setIcd10Open(true)}
-                  placeholder="Type to search ICD-10 codes..."
+                  onFocus={() => setIcd10Open(true)}
+                  placeholder="Type to search or browse ICD-10 codes..."
                   required
                 />
-                {icd10Open && icd10Results.length > 0 && (
+                {icd10Open && filteredIcd10.length > 0 && (
                   <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                    {icd10Results.map(c => (
+                    {filteredIcd10.map(c => (
                       <div key={c.id} onClick={() => selectIcd10(c)}
                         className="px-3 py-2 text-sm cursor-pointer hover:bg-muted flex justify-between">
                         <span className="font-mono text-xs text-muted-foreground mr-2">{c.code}</span>
@@ -501,6 +521,7 @@ const DoctorAppointments = () => {
               <div className="space-y-1">
                 <Label className="text-xs">Follow-up Date</Label>
                 <Input type="date" value={consultForm.followUpDate}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={e => setConsultForm({ ...consultForm, followUpDate: e.target.value })} />
               </div>
             </div>
@@ -514,14 +535,32 @@ const DoctorAppointments = () => {
 
             {prescriptionItems.map((item, idx) => (
               <div key={idx} className="bg-muted rounded-lg p-3 border border-border">
-                <div className="grid grid-cols-5 gap-2 items-end">
-                  <div className="space-y-1">
+                <div className="grid grid-cols-6 gap-2 items-end">
+                  <div className="space-y-1 relative col-span-2">
                     <Label className="text-xs">Medication</Label>
-                    <select className={selectClasses} value={item.medicationId} required
-                      onChange={e => updateItem(idx, 'medicationId', e.target.value)}>
-                      <option value="">Select</option>
-                      {medications.map(m => <option key={m.id} value={m.id}>{m.name} (Stock: {m.stockQuantity})</option>)}
-                    </select>
+                    <Input
+                      value={getMedSearch(idx) || (item.medicationId ? medications.find(m => String(m.id) === String(item.medicationId))?.name || '' : '')}
+                      onChange={e => { setMedSearch(idx, e.target.value); setMedOpenIdx(idx); updateItem(idx, 'medicationId', ''); }}
+                      onFocus={() => setMedOpenIdx(idx)}
+                      placeholder="Type medicine name..."
+                      required={!item.medicationId}
+                    />
+                    {medOpenIdx === idx && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {filteredMeds(idx).map(m => (
+                          <div key={m.id} onClick={() => selectMedication(idx, m)}
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-muted flex justify-between ${m.stockQuantity <= 0 ? 'opacity-50' : ''}`}>
+                            <span className="flex-1 truncate">{m.name}</span>
+                            <span className={`text-xs font-mono ml-2 ${m.stockQuantity <= 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              Stock: {m.stockQuantity}
+                            </span>
+                          </div>
+                        ))}
+                        {filteredMeds(idx).length === 0 && (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">No matching medication found</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Frequency</Label>

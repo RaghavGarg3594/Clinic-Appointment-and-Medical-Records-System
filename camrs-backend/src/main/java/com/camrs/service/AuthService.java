@@ -28,13 +28,14 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final AuditLogService auditLogService;
+    private final EmailService emailService;
 
     public AuthService(UserRepository userRepository, PatientRepository patientRepository,
                        DoctorRepository doctorRepository, StaffRepository staffRepository,
                        DoctorJoinRequestRepository doctorJoinRequestRepository,
                        PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager,
                        JwtUtil jwtUtil, UserDetailsService userDetailsService,
-                       AuditLogService auditLogService) {
+                       AuditLogService auditLogService, EmailService emailService) {
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
@@ -45,6 +46,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
         this.auditLogService = auditLogService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -112,6 +114,9 @@ public class AuthService {
         patient = patientRepository.save(patient);
 
         auditLogService.logAction(user, "REGISTER_PATIENT", "Patient", patient.getId(), "API");
+
+        // Send welcome email asynchronously
+        emailService.sendWelcomeEmail(patient.getEmail(), patient.getFirstName() + " " + patient.getLastName());
 
         return new PatientResponse(patient.getId(), user.getId(), patient.getFirstName(), patient.getLastName());
     }
@@ -202,5 +207,25 @@ public class AuthService {
         req.setStatus(DoctorJoinRequest.RequestStatus.PENDING);
         req = doctorJoinRequestRepository.save(req);
         return new DoctorJoinRequestResponse(req);
+    }
+
+    @Transactional
+    public String resetPasswordByNameAndDob(String firstName, String lastName, java.time.LocalDate dateOfBirth, String newPassword) {
+        Patient patient = patientRepository
+                .findByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndDateOfBirth(firstName, lastName, dateOfBirth)
+                .orElseThrow(() -> new RuntimeException("No patient found with the provided name and date of birth."));
+
+        User user = patient.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setAccountLocked(false);
+        user.setFailedLoginAttempts(0);
+        userRepository.save(user);
+
+        auditLogService.logAction(user, "PASSWORD_RESET", "User", user.getId(), "API");
+
+        // Send password reset confirmation email
+        emailService.sendPasswordResetConfirmation(patient.getEmail(), patient.getFirstName() + " " + patient.getLastName());
+
+        return "Password has been reset successfully. You can now log in with your new password.";
     }
 }

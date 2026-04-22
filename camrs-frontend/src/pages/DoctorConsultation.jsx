@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../services/api';
@@ -33,6 +33,7 @@ const DoctorConsultation = () => {
   const [searchParams] = useSearchParams();
   const prefilledApptId = searchParams.get('appointmentId') || '';
   const [medications, setMedications] = useState([]);
+  const [allIcd10Codes, setAllIcd10Codes] = useState([]);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -40,22 +41,27 @@ const DoctorConsultation = () => {
     chiefComplaint: '', vitalSigns: '', diagnosis: '', icd10Code: '', severity: 'LOW',
     advice: '', followUpDate: '',
   });
-  const [icd10Results, setIcd10Results] = useState([]);
   const [icd10Query, setIcd10Query] = useState('');
   const [icd10Open, setIcd10Open] = useState(false);
   const [prescriptionItems, setPrescriptionItems] = useState([]);
   const [labTests, setLabTests] = useState([]);
   const [orderedLabTests, setOrderedLabTests] = useState([]);
 
+  // Medication search state per prescription item
+  const [medSearches, setMedSearches] = useState({});
+  const [medOpenIdx, setMedOpenIdx] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [medsRes, labsRes] = await Promise.all([
+        const [medsRes, labsRes, icd10Res] = await Promise.all([
           api.get('/consultations/medications'),
-          api.get('/lab/types')
+          api.get('/lab/types'),
+          api.get('/consultations/icd10'),
         ]);
         setMedications(medsRes.data);
         setLabTests(labsRes.data);
+        setAllIcd10Codes(icd10Res.data);
       } catch (err) {
         console.error('Could not load lookup data:', err);
       }
@@ -77,6 +83,9 @@ const DoctorConsultation = () => {
 
   const removeItem = (idx) => {
     setPrescriptionItems(prescriptionItems.filter((_, i) => i !== idx));
+    const newSearches = { ...medSearches };
+    delete newSearches[idx];
+    setMedSearches(newSearches);
   };
 
   const getStockDeduction = (frequency, duration) => {
@@ -84,6 +93,25 @@ const DoctorConsultation = () => {
     const durObj = DURATION_OPTIONS.find(d => d.value === duration);
     if (!freqObj || !durObj) return '?';
     return freqObj.times * durObj.days;
+  };
+
+  // Check if a prescription item exceeds available stock
+  const getStockWarning = (item) => {
+    if (!item.medicationId) return null;
+    const med = medications.find(m => String(m.id) === String(item.medicationId));
+    if (!med) return null;
+    const deduction = getStockDeduction(item.frequency, item.duration);
+    if (typeof deduction === 'number' && deduction > (med.stockQuantity || 0)) {
+      return `⚠ Insufficient stock for ${med.name}: need ${deduction} units but only ${med.stockQuantity || 0} available`;
+    }
+    return null;
+  };
+
+  // Get tomorrow's date for follow-up min
+  const getTomorrowDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
   };
 
   const addLabTest = () => {
@@ -100,15 +128,13 @@ const DoctorConsultation = () => {
     setOrderedLabTests(orderedLabTests.filter((_, i) => i !== idx));
   };
 
-  const searchIcd10 = async (query) => {
-    setIcd10Query(query);
-    if (query.length < 1) { setIcd10Results([]); setIcd10Open(false); return; }
-    try {
-      const res = await api.get(`/consultations/icd10?q=${encodeURIComponent(query)}`);
-      setIcd10Results(res.data);
-      setIcd10Open(true);
-    } catch (err) { console.error(err); }
-  };
+  // ICD-10: filter from preloaded list
+  const filteredIcd10 = icd10Query.length > 0
+    ? allIcd10Codes.filter(c =>
+        c.code.toLowerCase().includes(icd10Query.toLowerCase()) ||
+        c.description.toLowerCase().includes(icd10Query.toLowerCase())
+      )
+    : allIcd10Codes;
 
   const selectIcd10 = (code) => {
     setForm({ ...form, icd10Code: code.code, diagnosis: code.description });
@@ -116,9 +142,40 @@ const DoctorConsultation = () => {
     setIcd10Open(false);
   };
 
+  // Medication search helpers
+  const getMedSearch = (idx) => medSearches[idx] || '';
+  const setMedSearch = (idx, val) => setMedSearches({ ...medSearches, [idx]: val });
+  const filteredMeds = (idx) => {
+    const q = getMedSearch(idx).toLowerCase();
+    if (!q) return medications;
+    return medications.filter(m => m.name.toLowerCase().includes(q));
+  };
+  const selectMedication = (idx, med) => {
+    updateItem(idx, 'medicationId', String(med.id));
+    setMedSearch(idx, med.name);
+    setMedOpenIdx(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); setSuccess('');
+
+    // Client-side: block if any medication exceeds stock
+    const stockIssues = prescriptionItems.map(getStockWarning).filter(Boolean);
+    if (stockIssues.length > 0) {
+      setError(stockIssues.join(' | '));
+      return;
+    }
+
+    // Client-side: validate follow-up date is in the future
+    if (form.followUpDate) {
+      const today = new Date().toISOString().split('T')[0];
+      if (form.followUpDate <= today) {
+        setError('Follow-up date must be in the future (at least tomorrow)');
+        return;
+      }
+    }
+
     try {
       const payload = {
         ...form,
@@ -147,6 +204,7 @@ const DoctorConsultation = () => {
       setIcd10Query('');
       setPrescriptionItems([]);
       setOrderedLabTests([]);
+      setMedSearches({});
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to record consultation');
     }
@@ -197,16 +255,17 @@ const DoctorConsultation = () => {
                   <Input
                     value={icd10Query || form.diagnosis}
                     onChange={e => {
-                      searchIcd10(e.target.value);
+                      setIcd10Query(e.target.value);
                       setForm({ ...form, diagnosis: e.target.value, icd10Code: '' });
+                      setIcd10Open(true);
                     }}
-                    onFocus={() => icd10Query.length > 0 && setIcd10Open(true)}
-                    placeholder="Type to search ICD-10 codes..."
+                    onFocus={() => setIcd10Open(true)}
+                    placeholder="Type to search or click to browse ICD-10 codes..."
                     required
                   />
-                  {icd10Open && icd10Results.length > 0 && (
+                  {icd10Open && filteredIcd10.length > 0 && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                      {icd10Results.map(c => (
+                      {filteredIcd10.map(c => (
                         <div key={c.id} onClick={() => selectIcd10(c)}
                           className="px-3 py-2 text-sm cursor-pointer hover:bg-muted flex justify-between">
                           <span className="font-mono text-xs text-muted-foreground mr-2">{c.code}</span>
@@ -237,7 +296,9 @@ const DoctorConsultation = () => {
                 <div className="space-y-2">
                   <Label>Follow-up Date</Label>
                   <Input type="date" value={form.followUpDate}
+                    min={getTomorrowDate()}
                     onChange={e => setForm({ ...form, followUpDate: e.target.value })} />
+                  <p className="text-[0.65rem] text-muted-foreground">Must be a future date</p>
                 </div>
               </div>
 
@@ -250,14 +311,32 @@ const DoctorConsultation = () => {
 
               {prescriptionItems.map((item, idx) => (
                 <motion.div key={idx} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-muted rounded-lg p-4 border border-border">
-                  <div className="grid grid-cols-5 gap-2 items-end">
-                    <div className="space-y-1 col-span-1">
+                  <div className="grid grid-cols-6 gap-2 items-end">
+                    <div className="space-y-1 col-span-2 relative">
                       <Label className="text-xs">Medication</Label>
-                      <select className={selectClasses} value={item.medicationId} required
-                        onChange={e => updateItem(idx, 'medicationId', e.target.value)}>
-                        <option value="">Select</option>
-                        {medications.map(m => <option key={m.id} value={m.id}>{m.name} (Stock: {m.stockQuantity})</option>)}
-                      </select>
+                      <Input
+                        value={getMedSearch(idx) || (item.medicationId ? medications.find(m => String(m.id) === String(item.medicationId))?.name || '' : '')}
+                        onChange={e => { setMedSearch(idx, e.target.value); setMedOpenIdx(idx); updateItem(idx, 'medicationId', ''); }}
+                        onFocus={() => setMedOpenIdx(idx)}
+                        placeholder="Type medicine name..."
+                        required={!item.medicationId}
+                      />
+                      {medOpenIdx === idx && (
+                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          {filteredMeds(idx).map(m => (
+                            <div key={m.id} onClick={() => selectMedication(idx, m)}
+                              className={`px-3 py-2 text-sm cursor-pointer hover:bg-muted flex justify-between ${m.stockQuantity <= 0 ? 'opacity-50' : ''}`}>
+                              <span className="flex-1 truncate">{m.name}</span>
+                              <span className={`text-xs font-mono ml-2 ${m.stockQuantity <= 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                Stock: {m.stockQuantity}
+                              </span>
+                            </div>
+                          ))}
+                          {filteredMeds(idx).length === 0 && (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">No matching medication found</div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Frequency</Label>
@@ -286,6 +365,10 @@ const DoctorConsultation = () => {
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground flex items-center gap-3">
                     <span>📦 Stock to deduct: <strong>{getStockDeduction(item.frequency, item.duration)}</strong> units</span>
+                    {item.medicationId && (() => {
+                      const med = medications.find(m => String(m.id) === String(item.medicationId));
+                      return med ? <span className="text-muted-foreground">| Available: <strong>{med.stockQuantity || 0}</strong></span> : null;
+                    })()}
                     <span>Route:
                       <select className="ml-1 text-xs border border-input rounded px-1 py-0.5 bg-transparent"
                         value={item.route} onChange={e => updateItem(idx, 'route', e.target.value)}>
@@ -298,6 +381,11 @@ const DoctorConsultation = () => {
                       </select>
                     </span>
                   </div>
+                  {getStockWarning(item) && (
+                    <div className="mt-2 text-xs font-semibold text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-1.5">
+                      {getStockWarning(item)}
+                    </div>
+                  )}
                 </motion.div>
               ))}
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { motion } from 'framer-motion';
 const selectClasses = "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 const PatientProfile = () => {
+  const { updateFullName } = useAuth();
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
@@ -43,6 +45,9 @@ const PatientProfile = () => {
       const res = await api.put('/patients/me', form);
       setProfile(res.data);
       setEditing(false);
+      // Update the welcome header name immediately
+      const newName = `${res.data.firstName} ${res.data.lastName}`;
+      updateFullName(newName);
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) { alert('Failed to update profile'); }

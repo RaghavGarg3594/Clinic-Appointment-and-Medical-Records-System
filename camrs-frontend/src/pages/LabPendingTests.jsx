@@ -54,7 +54,9 @@ const LabPendingTests = () => {
     try {
       await api.put(`/lab/orders/${id}/collect`);
       fetchOrders();
-    } catch (err) { alert('Failed to update status'); }
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data || 'Failed to update status. Bill may not be paid yet.');
+    }
   };
 
   const openResultModal = (order) => {
@@ -103,9 +105,13 @@ const LabPendingTests = () => {
                         <Badge variant={statusVariant(order.status)}>{order.status?.replace('_', ' ')}</Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-1.5 items-center">
                           {order.status === 'ORDERED' && (
-                            <Button size="sm" variant="outline" onClick={() => handleCollect(order.id)}>Collect Sample</Button>
+                            order.billPaid ? (
+                              <Button size="sm" variant="outline" onClick={() => handleCollect(order.id)}>Collect Sample</Button>
+                            ) : (
+                              <span className="text-xs text-destructive font-medium">⏳ Awaiting Payment</span>
+                            )
                           )}
                           {(order.status === 'SAMPLE_COLLECTED' || order.status === 'IN_PROGRESS') && (
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => openResultModal(order)}>Enter Results</Button>

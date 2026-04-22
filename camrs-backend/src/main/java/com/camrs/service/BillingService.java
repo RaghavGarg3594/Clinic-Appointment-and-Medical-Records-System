@@ -48,6 +48,7 @@ public class BillingService {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new RuntimeException("Bill not found"));
         
+        bill.setPaidAmount(bill.getTotalAmount());
         bill.setStatus(Bill.BillStatus.PAID);
         bill = billRepository.save(bill);
 
@@ -104,6 +105,10 @@ public class BillingService {
         resp.setDiscount(bill.getDiscount());
         resp.setTotalAmount(bill.getTotalAmount());
         resp.setStatus(bill.getStatus().name());
+        resp.setPaidAmount(bill.getPaidAmount());
+        BigDecimal total = bill.getTotalAmount() != null ? bill.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal paid = bill.getPaidAmount() != null ? bill.getPaidAmount() : BigDecimal.ZERO;
+        resp.setDueAmount(total.subtract(paid).max(BigDecimal.ZERO));
 
         boolean hasLabReport = false;
         boolean hasPendingLabTests = false;

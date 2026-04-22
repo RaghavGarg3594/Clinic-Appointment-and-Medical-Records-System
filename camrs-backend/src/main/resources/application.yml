@@ -25,11 +25,27 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:shashwatmalik10@gmail.com}
+    password: ${MAIL_PASSWORD:wipa civa efgb umhm}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enabled: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 server:
   port: ${SERVER_PORT:8080}
 
 camrs:
   notifications:
-    email-enabled: false
+    email-enabled: true
   pdf:
     output-dir: ${java.io.tmpdir}/camrs-pdfs

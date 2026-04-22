@@ -93,6 +93,25 @@ public class ConsultationService {
         Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        // Validate follow-up date must be in the future
+        if (request.getFollowUpDate() != null && !request.getFollowUpDate().isAfter(java.time.LocalDate.now())) {
+            throw new RuntimeException("Follow-up date must be in the future");
+        }
+
+        // Validate stock levels for all prescribed medications before proceeding
+        if (request.getPrescriptionItems() != null) {
+            for (PrescriptionItemRequest itemReq : request.getPrescriptionItems()) {
+                Medication med = medicationRepository.findById(itemReq.getMedicationId())
+                        .orElseThrow(() -> new RuntimeException("Medication not found: " + itemReq.getMedicationId()));
+                int requiredQty = calculateStockDeduction(itemReq.getFrequency(), itemReq.getDuration());
+                int currentStock = med.getStockQuantity() != null ? med.getStockQuantity() : 0;
+                if (requiredQty > currentStock) {
+                    throw new RuntimeException("Insufficient stock for " + med.getName()
+                            + ": required " + requiredQty + " units, but only " + currentStock + " available");
+                }
+            }
+        }
+
         MedicalRecord record = new MedicalRecord();
         record.setPatient(appointment.getPatient());
         record.setDoctor(doctor);
@@ -181,24 +200,37 @@ public class ConsultationService {
         
         BigDecimal labCharge = BigDecimal.ZERO; // Lab charges added later via lab order endpoint
 
-        // Only create the supplementary bill if there are charges
+        // Only update/create the supplementary bill if there are charges
         if (medicationCharge.compareTo(BigDecimal.ZERO) > 0 || labCharge.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal subTotal = medicationCharge.add(labCharge);
-            BigDecimal tax = subTotal.multiply(new BigDecimal("0.12")); // 12% TAX
-            BigDecimal totalAmount = subTotal.add(tax);
+            BigDecimal medLabTax = subTotal.multiply(new BigDecimal("0.12")); // 12% TAX on new charges only
 
-            Bill bill = new Bill();
-            bill.setAppointment(appointment);
-            bill.setPatient(appointment.getPatient());
-            bill.setInvoiceNumber("INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-            bill.setIssueDate(LocalDateTime.now());
-            bill.setConsultationCharge(BigDecimal.ZERO);
-            bill.setMedicationCharge(medicationCharge);
-            bill.setLabCharge(labCharge);
-            bill.setTax(tax);
-            bill.setDiscount(BigDecimal.ZERO);
-            bill.setTotalAmount(totalAmount);
-            bill.setStatus(Bill.BillStatus.UNPAID);
+            // Check if a bill already exists for this appointment (created at booking time)
+            java.util.Optional<Bill> existingBillOpt = billRepository.findByAppointmentId(appointment.getId());
+            Bill bill;
+            if (existingBillOpt.isPresent()) {
+                bill = existingBillOpt.get();
+                bill.setMedicationCharge(medicationCharge);
+                bill.setLabCharge(labCharge);
+                // Tax only on medication + lab charges (consultation fee was already taxed/paid)
+                bill.setTax(medLabTax);
+                // Total = already-paid consultation charge + new med/lab charges + tax on new charges
+                bill.setTotalAmount(bill.getConsultationCharge().add(subTotal).add(medLabTax));
+                bill.setStatus(Bill.BillStatus.UNPAID);
+            } else {
+                bill = new Bill();
+                bill.setAppointment(appointment);
+                bill.setPatient(appointment.getPatient());
+                bill.setInvoiceNumber("INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+                bill.setIssueDate(LocalDateTime.now());
+                bill.setConsultationCharge(BigDecimal.ZERO);
+                bill.setMedicationCharge(medicationCharge);
+                bill.setLabCharge(labCharge);
+                bill.setTax(medLabTax);
+                bill.setDiscount(BigDecimal.ZERO);
+                bill.setTotalAmount(subTotal.add(medLabTax));
+                bill.setStatus(Bill.BillStatus.UNPAID);
+            }
             billRepository.save(bill);
 
             notificationService.sendBillGenerated(

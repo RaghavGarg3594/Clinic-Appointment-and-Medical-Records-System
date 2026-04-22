@@ -47,6 +47,9 @@ public class Bill {
     @Column(name = "total_amount")
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
+    @Column(name = "paid_amount")
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     private BillStatus status = BillStatus.UNPAID;
 
@@ -101,6 +104,8 @@ public class Bill {
     public void setTax(BigDecimal tax) { this.tax = tax; }
     public BigDecimal getTotalAmount() { return this.totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getPaidAmount() { return this.paidAmount != null ? this.paidAmount : BigDecimal.ZERO; }
+    public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
     public BillStatus getStatus() { return this.status; }
     public void setStatus(BillStatus status) { this.status = status; }
     public List<Payment> getPayments() { return this.payments; }

@@ -46,8 +46,12 @@ public class LabController {
 
     @PutMapping("/orders/{id}/collect")
     @PreAuthorize("hasRole('LAB_STAFF')")
-    public ResponseEntity<LabOrderResponse> markSampleCollected(@PathVariable Integer id) {
-        return ResponseEntity.ok(labService.markSampleCollected(id));
+    public ResponseEntity<?> markSampleCollected(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(labService.markSampleCollected(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
     }
     
     @PostMapping("/orders/{id}/results")

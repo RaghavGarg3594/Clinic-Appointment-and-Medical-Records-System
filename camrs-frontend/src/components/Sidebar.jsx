@@ -34,8 +34,7 @@ const Sidebar = () => {
           menu: [
             { name: 'Dashboard', path: '/doctor/dashboard' },
             { name: 'Appointments', path: '/doctor/appointments' },
-            { name: 'Prescriptions', path: '/doctor/prescriptions' },
-            { name: 'Prescription History', path: '/doctor/prescription-history' }
+            { name: 'Prescriptions', path: '/doctor/prescriptions' }
           ],
           general: []
         };

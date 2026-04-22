@@ -33,4 +33,12 @@ public interface LabTestOrderRepository extends JpaRepository<LabTestOrder, Inte
            "LEFT JOIN FETCH o.labResult " +
            "WHERE o.patient.id = :patientId")
     List<LabTestOrder> findByPatientIdWithDetails(@Param("patientId") Integer patientId);
+
+    @Query("SELECT DISTINCT o FROM LabTestOrder o " +
+           "LEFT JOIN FETCH o.patient " +
+           "LEFT JOIN FETCH o.doctor " +
+           "LEFT JOIN FETCH o.labResult " +
+           "WHERE o.doctor.id = :doctorId " +
+           "ORDER BY o.orderDate DESC")
+    List<LabTestOrder> findByDoctorIdWithDetails(@Param("doctorId") Integer doctorId);
 }

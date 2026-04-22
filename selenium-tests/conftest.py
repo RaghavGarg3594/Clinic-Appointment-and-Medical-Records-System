@@ -1,11 +1,16 @@
 """
 CAMRS Selenium Test Suite — Shared Fixtures & Helpers
 =====================================================
-Provides browser setup, login helpers, and shared test configuration.
+Provides browser setup, login helpers, API utilities, and shared test
+configuration for the CAMRS (Clinic Appointment & Medical Records System).
+
+Run:  pytest selenium-tests/test_camrs.py -v --tb=short
 """
 
+import os
 import pytest
 import time
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -15,21 +20,26 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # ── Configuration ─────────────────────────────────────────────────
-BASE_URL = "http://localhost:5173"
-BACKEND_URL = "http://localhost:8080"
+BASE_URL = os.getenv("CAMRS_FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = os.getenv("CAMRS_BACKEND_URL", "http://localhost:8080")
 IMPLICIT_WAIT = 10
 EXPLICIT_WAIT = 15
 
-# Default test credentials (from demo-seed.sql / DataInitializer)
+# Default test credentials (from camrs-full-setup.sql / DataInitializer)
 TEST_USERS = {
-    "admin": {"email": "admin@camrs.com", "password": "password123", "role": "ADMIN_STAFF"},
-    "doctor": {"email": "doctor@camrs.com", "password": "password123", "role": "DOCTOR"},
-    "patient": {"email": "patient@camrs.com", "password": "password123", "role": "PATIENT"},
-    "lab": {"email": "lab@camrs.com", "password": "password123", "role": "LAB_STAFF"},
+    "admin":   {"email": "admin@camrs.com",    "password": "password123", "role": "ADMIN_STAFF"},
+    "doctor":  {"email": "doctor@camrs.com",   "password": "password123", "role": "DOCTOR"},
+    "patient": {"email": "patient@camrs.com",  "password": "password123", "role": "PATIENT"},
+    "patient2":{"email": "patient2@camrs.com", "password": "password123", "role": "PATIENT"},
+    "lab":     {"email": "lab@camrs.com",       "password": "password123", "role": "LAB_STAFF"},
 }
 
+# Screenshots directory
+SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
+os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
-# ── Browser Fixture ──────────────────────────────────────────────
+
+# ── Browser Fixtures ─────────────────────────────────────────────
 @pytest.fixture(scope="function")
 def driver():
     """Create a fresh Chrome browser instance for each test."""
@@ -37,13 +47,13 @@ def driver():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1440,900")
-    # To run headless, uncomment:
+    chrome_options.add_argument("--disable-gpu")
+    # Uncomment for headless execution:
     # chrome_options.add_argument("--headless=new")
 
     try:
         browser = webdriver.Chrome(options=chrome_options)
     except Exception:
-        # Fallback: try with webdriver-manager
         from webdriver_manager.chrome import ChromeDriverManager
         service = Service(ChromeDriverManager().install())
         browser = webdriver.Chrome(service=service, options=chrome_options)
@@ -61,6 +71,7 @@ def headless_driver():
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--window-size=1440,900")
+    chrome_options.add_argument("--disable-gpu")
 
     try:
         browser = webdriver.Chrome(options=chrome_options)
@@ -74,31 +85,35 @@ def headless_driver():
     browser.quit()
 
 
-# ── Helper Functions ─────────────────────────────────────────────
+# ── Login Helpers ────────────────────────────────────────────────
 def login(driver, email, password):
     """
     Perform login via the CAMRS login page.
+    Waits for the login form, fills credentials, clicks submit,
+    and waits for navigation away from /login.
     Returns True if login succeeded, False otherwise.
     """
     driver.get(f"{BASE_URL}/login")
     wait = WebDriverWait(driver, EXPLICIT_WAIT)
 
     try:
-        # Wait for login form to be present
-        email_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email'], input[name='email']")))
+        # Wait for the email input (#email id from Login.jsx)
+        email_input = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#email, input[type='email']"))
+        )
         email_input.clear()
         email_input.send_keys(email)
 
-        password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password']")
+        password_input = driver.find_element(By.CSS_SELECTOR, "#password, input[type='password']")
         password_input.clear()
         password_input.send_keys(password)
 
-        # Click login button
-        login_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-        login_btn.click()
+        # Click 'Sign in' button
+        submit_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        submit_btn.click()
 
-        # Wait for redirect away from login page
-        time.sleep(2)  # Allow the page to load
+        # Wait for redirect away from /login
+        time.sleep(2)
         wait.until(lambda d: "/login" not in d.current_url)
         return True
     except (TimeoutException, NoSuchElementException) as e:
@@ -107,7 +122,7 @@ def login(driver, email, password):
 
 
 def login_as(driver, role_key):
-    """Login as a specific role (admin, doctor, patient, lab)."""
+    """Login as a specific role (admin, doctor, patient, patient2, lab)."""
     user = TEST_USERS.get(role_key)
     if not user:
         raise ValueError(f"Unknown role key: {role_key}")
@@ -116,13 +131,14 @@ def login_as(driver, role_key):
 
 def logout(driver):
     """Perform logout by clearing localStorage and navigating to login."""
-    driver.execute_script("localStorage.clear();")
+    driver.execute_script("localStorage.clear(); sessionStorage.clear();")
     driver.get(f"{BASE_URL}/login")
     time.sleep(1)
 
 
+# ── Wait Helpers ─────────────────────────────────────────────────
 def wait_for_element(driver, selector, by=By.CSS_SELECTOR, timeout=EXPLICIT_WAIT):
-    """Wait for an element to be present and return it."""
+    """Wait for an element to be present in the DOM and return it."""
     wait = WebDriverWait(driver, timeout)
     return wait.until(EC.presence_of_element_located((by, selector)))
 
@@ -148,15 +164,59 @@ def is_element_present(driver, selector, by=By.CSS_SELECTOR):
         return False
 
 
-def get_page_title(driver):
-    """Get the main heading (h1) text from the page."""
+def get_page_heading(driver, tag="h1"):
+    """Get the main heading text from the page."""
     try:
-        h1 = driver.find_element(By.TAG_NAME, "h1")
-        return h1.text
+        el = driver.find_element(By.TAG_NAME, tag)
+        return el.text
     except NoSuchElementException:
         return ""
 
 
 def take_screenshot(driver, name):
-    """Take a screenshot for debugging."""
-    driver.save_screenshot(f"selenium-tests/screenshots/{name}.png")
+    """Save a screenshot for debugging."""
+    filepath = os.path.join(SCREENSHOT_DIR, f"{name}.png")
+    driver.save_screenshot(filepath)
+    return filepath
+
+
+def find_button_by_text(driver, text):
+    """Find a button element containing the specified text."""
+    buttons = driver.find_elements(By.CSS_SELECTOR, "button")
+    for btn in buttons:
+        if text in btn.text:
+            return btn
+    return None
+
+
+# ── API Helpers ──────────────────────────────────────────────────
+def api_login(email, password):
+    """Login via the REST API and return the JWT token."""
+    resp = requests.post(f"{BACKEND_URL}/api/auth/login", json={
+        "email": email, "password": password
+    })
+    resp.raise_for_status()
+    return resp.json().get("token")
+
+
+def api_get(endpoint, token):
+    """Make an authenticated GET request to the backend API."""
+    resp = requests.get(f"{BACKEND_URL}/api{endpoint}", headers={
+        "Authorization": f"Bearer {token}"
+    })
+    resp.raise_for_status()
+    return resp.json()
+
+
+def set_date_input(driver, selector, date_value):
+    """Set a date input value via JavaScript (cross-platform compatible)."""
+    driver.execute_script(f"""
+        var el = document.querySelector("{selector}");
+        if (!el) return;
+        var setter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value').set;
+        setter.call(el, '{date_value}');
+        el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+        el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+    """)
+    time.sleep(0.5)

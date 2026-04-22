@@ -62,6 +62,11 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
+  const updateFullName = (newName) => {
+    localStorage.setItem('fullName', newName);
+    setUser(prev => prev ? { ...prev, fullName: newName } : prev);
+  };
+
   const logout = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     doLogout();
@@ -70,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateFullName }}>
       {children}
     </AuthContext.Provider>
   );

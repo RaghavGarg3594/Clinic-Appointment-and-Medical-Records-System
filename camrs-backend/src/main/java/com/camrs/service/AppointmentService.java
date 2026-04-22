@@ -21,6 +21,7 @@ public class AppointmentService {
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
     private final BillRepository billRepository;
+    private final EmailService emailService;
 
     private static final LocalTime DEFAULT_START = LocalTime.of(9, 0);
     private static final LocalTime DEFAULT_END = LocalTime.of(18, 0);
@@ -28,12 +29,13 @@ public class AppointmentService {
 
     public AppointmentService(AppointmentRepository appointmentRepository, DoctorRepository doctorRepository,
                               PatientRepository patientRepository, UserRepository userRepository,
-                              BillRepository billRepository) {
+                              BillRepository billRepository, EmailService emailService) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.billRepository = billRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -89,6 +91,15 @@ public class AppointmentService {
 
         // Create appointment fee bill (Option B: flat consultation fee)
         createAppointmentFeeBill(appt, doctor);
+
+        // Send appointment confirmation email with token
+        emailService.sendAppointmentConfirmation(
+                patient.getEmail(),
+                patient.getFirstName() + " " + patient.getLastName(),
+                doctor.getFirstName() + " " + doctor.getLastName(),
+                appt.getAppointmentDate().toString(),
+                appt.getTimeSlot().toString(),
+                appt.getTokenNumber());
 
         return mapToResponse(appt);
     }
@@ -178,7 +189,10 @@ public class AppointmentService {
         Doctor doctor = doctorRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("Doctor profile not found"));
         return appointmentRepository
                 .findByDoctorIdAndAppointmentDateGreaterThanEqualOrderByAppointmentDateAscTimeSlotAsc(doctor.getId(), LocalDate.now())
-                .stream().map(this::mapToResponse)
+                .stream()
+                .filter(a -> a.getStatus() != Appointment.AppointmentStatus.COMPLETED
+                          && a.getStatus() != Appointment.AppointmentStatus.CANCELLED)
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
     @Transactional
@@ -217,7 +231,17 @@ public class AppointmentService {
         appt.setAppointmentTime(parsedTime);
         appt.setStatus(Appointment.AppointmentStatus.RESCHEDULED);
 
-        return mapToResponse(appointmentRepository.save(appt));
+        appt = appointmentRepository.save(appt);
+
+        // Send reschedule confirmation email
+        emailService.sendAppointmentRescheduled(
+                appt.getPatient().getEmail(),
+                appt.getPatient().getFirstName() + " " + appt.getPatient().getLastName(),
+                appt.getDoctor().getFirstName() + " " + appt.getDoctor().getLastName(),
+                newDate.toString(),
+                newTimeSlot);
+
+        return mapToResponse(appt);
     }
 
     public List<LocalTime> getAvailableSlots(Integer doctorId, LocalDate date) {

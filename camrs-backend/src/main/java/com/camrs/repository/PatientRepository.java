@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Integer> {
     java.util.Optional<Patient> findByUserId(Integer userId);
+    java.util.Optional<Patient> findByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndDateOfBirth(
+            String firstName, String lastName, java.time.LocalDate dateOfBirth);
 }
